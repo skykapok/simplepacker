@@ -1,9 +1,12 @@
 .DS_Store
 
+bin
+test/png_out
+
 build/msvc/*.sdf
 build/msvc/*.suo
 build/msvc/*.opensdf
 build/msvc/ipch
 build/msvc/_build
 
-bin
+build/osx/_build

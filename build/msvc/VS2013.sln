@@ -3,22 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImageTool", "ImageTool\ImageTool.vcxproj", "{3C582187-2F5E-40F7-89BC-B47D5C69C72F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69} = {DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}
-		{9EAED6FD-3896-4F72-8688-7C3C0802B7ED} = {9EAED6FD-3896-4F72-8688-7C3C0802B7ED}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PackageTool", "PackageTool\PackageTool.vcxproj", "{680992B9-12A7-47EC-BF34-6625B38D732C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69} = {DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AllInOne", "AllInOne\AllInOne.vcxproj", "{6CAFF575-96E8-414C-9DFE-86D14B248E78}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69} = {DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng\libpng.vcxproj", "{9EAED6FD-3896-4F72-8688-7C3C0802B7ED}"
 	ProjectSection(ProjectDependencies) = postProject
 		{57104610-3452-4A26-9D4A-331ABAA5EFEF} = {57104610-3452-4A26-9D4A-331ABAA5EFEF}
@@ -30,22 +14,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "lua\lua.vcxproj", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rd", "3rd", "{7BBE2E2E-B268-4A6F-A599-2E5A7849C3D0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simplepacker", "simplepacker\simplepacker.vcxproj", "{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69} = {DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}
+		{9EAED6FD-3896-4F72-8688-7C3C0802B7ED} = {9EAED6FD-3896-4F72-8688-7C3C0802B7ED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3C582187-2F5E-40F7-89BC-B47D5C69C72F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3C582187-2F5E-40F7-89BC-B47D5C69C72F}.Debug|Win32.Build.0 = Debug|Win32
-		{3C582187-2F5E-40F7-89BC-B47D5C69C72F}.Release|Win32.ActiveCfg = Release|Win32
-		{3C582187-2F5E-40F7-89BC-B47D5C69C72F}.Release|Win32.Build.0 = Release|Win32
-		{680992B9-12A7-47EC-BF34-6625B38D732C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{680992B9-12A7-47EC-BF34-6625B38D732C}.Debug|Win32.Build.0 = Debug|Win32
-		{680992B9-12A7-47EC-BF34-6625B38D732C}.Release|Win32.ActiveCfg = Release|Win32
-		{680992B9-12A7-47EC-BF34-6625B38D732C}.Release|Win32.Build.0 = Release|Win32
-		{6CAFF575-96E8-414C-9DFE-86D14B248E78}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6CAFF575-96E8-414C-9DFE-86D14B248E78}.Release|Win32.ActiveCfg = Release|Win32
 		{9EAED6FD-3896-4F72-8688-7C3C0802B7ED}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9EAED6FD-3896-4F72-8688-7C3C0802B7ED}.Debug|Win32.Build.0 = Debug|Win32
 		{9EAED6FD-3896-4F72-8688-7C3C0802B7ED}.Release|Win32.ActiveCfg = Release|Win32
@@ -58,6 +38,10 @@ Global
 		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}.Debug|Win32.Build.0 = Debug|Win32
 		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}.Release|Win32.ActiveCfg = Release|Win32
 		{DCEE84F9-3E1C-4FA0-A541-C5C1B8887F69}.Release|Win32.Build.0 = Release|Win32
+		{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}.Debug|Win32.Build.0 = Debug|Win32
+		{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}.Release|Win32.ActiveCfg = Release|Win32
+		{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
