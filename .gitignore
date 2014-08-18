@@ -1,0 +1,9 @@
+.DS_Store
+
+build/msvc/*.sdf
+build/msvc/*.suo
+build/msvc/*.opensdf
+build/msvc/ipch
+build/msvc/_build
+
+bin

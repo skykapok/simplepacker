@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\3rd\libpng\png.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngerror.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngget.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngmem.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngpread.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngread.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngrio.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngrtran.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngrutil.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngset.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngtrans.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngwio.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngwrite.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngwtran.c" />
+    <ClCompile Include="..\..\..\3rd\libpng\pngwutil.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\3rd\libpng\png.h" />
+    <ClInclude Include="..\..\..\3rd\libpng\pngconf.h" />
+    <ClInclude Include="..\..\..\3rd\libpng\pngdebug.h" />
+    <ClInclude Include="..\..\..\3rd\libpng\pnginfo.h" />
+    <ClInclude Include="..\..\..\3rd\libpng\pngpriv.h" />
+    <ClInclude Include="..\..\..\3rd\libpng\pngstruct.h" />
+  </ItemGroup>
+</Project>

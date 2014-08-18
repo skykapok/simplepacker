@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <UM_OUTPUT_DIR>..\..\..\bin\msvc\</UM_OUTPUT_DIR>
+    <UM_BUILD_DIR>..\_build\</UM_BUILD_DIR>
+    <UM_SCRIPTS_DIR>..\..\..\src\scripts\</UM_SCRIPTS_DIR>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(UM_OUTPUT_DIR)$(Configuration)\</OutDir>
+    <IntDir>$(UM_BUILD_DIR)$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\..\3rd\lua;..\..\..\3rd\zlib;..\..\..\3rd\libpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="UM_OUTPUT_DIR">
+      <Value>$(UM_OUTPUT_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="UM_BUILD_DIR">
+      <Value>$(UM_BUILD_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="UM_SCRIPTS_DIR">
+      <Value>$(UM_SCRIPTS_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
