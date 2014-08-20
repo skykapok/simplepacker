@@ -4,17 +4,18 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <Shlobj.h>
 #endif
 
 static int
 lwalkdir(lua_State *L) {
-	const char* folder = lua_tostring(L, -1);
+	const char* path = luaL_checkstring(L, -1);
 	lua_newtable(L);
 	int i = 1;
 
 #ifdef WIN32
 	char szPath[MAX_PATH];
-	sprintf(szPath, "%s\\*", folder);
+	sprintf(szPath, "%s\\*", path);
 
 	WIN32_FIND_DATA findData;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -38,10 +39,24 @@ lwalkdir(lua_State *L) {
 	return 1;
 }
 
+static int
+lmakedir(lua_State *L) {
+	const char* path = luaL_checkstring(L, -1);
+
+#ifdef WIN32
+	char buf[MAX_PATH];
+	GetFullPathName(path, MAX_PATH, buf, NULL);
+	SHCreateDirectoryEx(NULL, buf, NULL);
+#endif
+
+	return 0;
+}
+
 int
 register_libos(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "walkdir", lwalkdir },
+		{ "makedir", lmakedir },
 		{ NULL, NULL }
 	};
 

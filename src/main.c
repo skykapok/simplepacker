@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 	luaL_requiref(L, "libos", register_libos, 0);
 
 	if (luaL_dofile(L, "main.lua") != LUA_OK) {
-		printf("====== load script failed ======\n");
+		printf("====== load script failed ======\n%s\n", lua_tostring(L, -1));
 		goto ERR;
 	}
 

@@ -41,6 +41,7 @@ function run(args)
 		input = string.sub(input, 1, -2)
 	end
 	local output = input.."_out"
+	libos:makedir(output)
 
 	local file_list = libos.walkdir(input)
 	if not file_list then
@@ -55,11 +56,9 @@ function run(args)
 	for _,v in ipairs(file_list) do
 		if g_step1 and _check_ext(v, ".png") then
 			local img = image:load_img(input.."/"..v)
+			img.name = string.sub(v, 1, -5)
 			if img then
-				logf("%s loaded, w=%d h=%d", v, img.w, img.h)
 				table.insert(imgs, img)
-			else
-				logf("%s load failed", v)
 			end
 		end
 
@@ -103,5 +102,9 @@ function run(args)
 
 		-- save to disk
 		pkg:save(output)
+	end
+
+	for i,v in ipairs(imgs) do
+		v:save(output.."/"..v.name)
 	end
 end

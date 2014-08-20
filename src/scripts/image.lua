@@ -1,15 +1,12 @@
 local libimage = require "libimage"
 local binpacking = require "binpacking"
 
-local PIXEL_FMT_RGB = 0
-local PIXEL_FMT_RGBA = 1
-
 -- image
 local img_mt = {}
 img_mt.__index = img_mt
 
 function img_mt:save(path)
-	libimage:saveppm(self.w, self.h, self.pixfmt, self.buf)
+	libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
 end
 
 -- packed large image
@@ -44,7 +41,7 @@ function M:new_pimg(size, pixfmt)
 	local pimg = {}
 	pimg.w = size or 1024
 	pimg.h = size or 1024
-	pimg.pixfmt = pixfmt or PIXEL_FMT_RGBA
+	pimg.pixfmt = pixfmt or "RGBA"
 	pimg.imgs = {}
 	pimg.bin = binpacking:new_bin(pimg.w, pimg.h)
 	return setmetatable(pimg, pimg_mt)
