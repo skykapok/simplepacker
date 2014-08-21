@@ -47,7 +47,7 @@ end
 -- libimage module
 local M = {}
 
-function M:load_img(path)
+function M:load_img(path, name)
 	local buf, pixfmt, w, h = libimage:loadpng(path)
 	if buf then
 		local img = {}
@@ -55,6 +55,7 @@ function M:load_img(path)
 		img.pixfmt = pixfmt  -- pixel format string
 		img.w = w
 		img.h = h
+		img.name = name
 		return setmetatable(img, img_mt)
 	end
 end
