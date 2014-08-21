@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "lualib.h"
 #include "lauxlib.h"
 
@@ -52,11 +54,26 @@ lmakedir(lua_State *L) {
 	return 0;
 }
 
+static int
+lwritefile(lua_State *L) {
+	const char* path = luaL_checkstring(L, -2);
+	const char* content = luaL_checkstring(L, -1);
+
+	FILE* fp = fopen(path, "w");
+	if (!fp) { return 0; }
+
+	fprintf(fp, content);
+	fclose(fp);
+
+	return 0;
+}
+
 int
 register_libos(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "walkdir", lwalkdir },
 		{ "makedir", lmakedir },
+		{ "writefile", lwritefile },
 		{ NULL, NULL }
 	};
 

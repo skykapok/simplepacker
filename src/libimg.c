@@ -7,6 +7,23 @@
 
 #define PNG_BYTES_TO_CHECK 4
 
+#define PIXEL_FORMAT_UNKNOW 0
+#define PIXEL_FORMAT_RGB 1
+#define PIXEL_FORMAT_RGBA 2
+
+static int
+_check_pixel_format(const char* fmt) {
+	if (!fmt) { return PIXEL_FORMAT_UNKNOW; }
+
+	if (strcmp(fmt, "RGB") == 0) {
+		return PIXEL_FORMAT_RGB;
+	} else if (strcmp(fmt, "RGBA") == 0) {
+		return PIXEL_FORMAT_RGBA;
+	} else {
+		return PIXEL_FORMAT_UNKNOW;
+	}
+}
+
 static int
 lloadpng(lua_State *L) {
 	// open file
@@ -58,10 +75,10 @@ lloadpng(lua_State *L) {
 			for (int i = 0; i < h; ++i) {
 				for (int j = 0; j < w; ++j) {
 					int k = (i*w + j) * 4;
-					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red  
-					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green  
-					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue  
-					buf[k + 3] = row_pointers[i][j * 4 + 3]; // alpha  
+					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red
+					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green
+					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue
+					buf[k + 3] = row_pointers[i][j * 4 + 3]; // alpha
 				}
 			}
 			lua_pushstring(L, "RGBA");
@@ -72,9 +89,9 @@ lloadpng(lua_State *L) {
 			for (int i = 0; i < h; ++i) {
 				for (int j = 0; j < w; ++j) {
 					int k = (i*w + j) * 3;
-					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red  
-					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green  
-					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue  
+					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red
+					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green
+					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue
 				}
 			}
 			lua_pushstring(L, "RGB");
@@ -99,9 +116,8 @@ lsaveppm(lua_State *L) {
 	const char* path = luaL_checkstring(L, -5);  // filename without extension
 	int w = luaL_checkint(L, -4);
 	int h = luaL_checkint(L, -3);
-	const char* color_type = luaL_checkstring(L, -2);  // RGBA or RGB
+	int pixfmt = _check_pixel_format(luaL_checkstring(L, -2));
 	unsigned char* buf = lua_touserdata(L, -1);
-	int has_a = strcmp(color_type, "RGBA") == 0;
 
 	char fn[512];
 	FILE *fp;
@@ -117,7 +133,7 @@ lsaveppm(lua_State *L) {
 	// write rgb
 	unsigned char* rgb = (unsigned char*)malloc(w*h * 3);
 	for (int i = 0; i < w*h; ++i) {
-		if (has_a && buf[i * 4 + 3] == 0) {  // write black if alpha is 0
+		if (pixfmt == PIXEL_FORMAT_RGBA && buf[i * 4 + 3] == 0) {  // write black if alpha is 0
 			rgb[i * 3 + 0] = 0;
 			rgb[i * 3 + 1] = 0;
 			rgb[i * 3 + 2] = 0;
@@ -130,8 +146,8 @@ lsaveppm(lua_State *L) {
 	fwrite(rgb, 3, w*h, fp);
 	fclose(fp);
 	free(rgb);
-	
-	if (has_a) {
+
+	if (pixfmt == PIXEL_FORMAT_RGBA) {
 		// open files for alpha channel
 		sprintf(fn, "%s.pgm", path);
 		fp = fopen(fn, "wb");
@@ -153,11 +169,86 @@ lsaveppm(lua_State *L) {
 	return 0;
 }
 
+static int
+lnewimg(lua_State *L) {
+	int s = luaL_checkint(L, -2);
+	int pixfmt = _check_pixel_format(luaL_checkstring(L, -1));
+	unsigned char* buf = NULL;
+	int buf_size = 0;
+
+	switch (pixfmt) {
+	case PIXEL_FORMAT_RGB:
+		buf_size = s*s * 3;
+		buf = lua_newuserdata(L, buf_size);
+		memset(buf, 0, buf_size);
+		break;
+
+	case PIXEL_FORMAT_RGBA:
+		buf_size = s*s * 4;
+		buf = lua_newuserdata(L, buf_size);
+		memset(buf, 0, buf_size);
+		break;
+
+	default:
+		luaL_error(L, "unknown pixel format");
+	}
+
+	return 1;
+}
+
+static int
+lmergeimg(lua_State *L) {
+	// parse arguments
+	int y = luaL_checkint(L, -1);
+	int x = luaL_checkint(L, -2);
+	int src_h = luaL_checkint(L, -3);
+	int src_w = luaL_checkint(L, -4);
+	unsigned char* src = lua_touserdata(L, -5);
+	int pixfmt = _check_pixel_format(luaL_checkstring(L, -6));
+	int dst_s = luaL_checkint(L, -7);
+	unsigned char* dst = lua_touserdata(L, -8);
+
+	switch (pixfmt) {  // copy pixels
+	case PIXEL_FORMAT_RGB:
+		for (int i = 0; i < src_h; ++i) {
+			for (int j = 0; j < src_w; ++j) {
+				int k1 = ((y + i)*dst_s + (x + j)) * 3;
+				int k2 = (i*src_w + j) * 3;
+				dst[k1 + 0] = src[k2 + 0];
+				dst[k1 + 1] = src[k2 + 1];
+				dst[k1 + 2] = src[k2 + 2];
+			}
+		}
+		break;
+
+	case PIXEL_FORMAT_RGBA:
+		for (int i = 0; i < src_h; ++i) {
+			for (int j = 0; j < src_w; ++j) {
+				int k1 = ((y + i)*dst_s + (x + j)) * 4;
+				int k2 = (i*src_w + j) * 4;
+				dst[k1 + 0] = src[k2 + 0];
+				dst[k1 + 1] = src[k2 + 1];
+				dst[k1 + 2] = src[k2 + 2];
+				dst[k1 + 3] = src[k2 + 3];
+			}
+		}
+		break;
+
+	default:
+		luaL_error(L, "unknown pixel format");
+		break;
+	}
+
+	return 0;
+}
+
 int
 register_libimage(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "loadpng", lloadpng },
 		{ "saveppm", lsaveppm },
+		{ "newimg", lnewimg },
+		{ "mergeimg", lmergeimg },
 		{ NULL, NULL }
 	};
 

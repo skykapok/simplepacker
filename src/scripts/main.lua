@@ -49,9 +49,9 @@ function run(args)
 		return
 	end
 
-	local imgs = {}
-	local pimgs = {}
-	local anims = {}
+	local imgs = {}  -- raw images, only png supported
+	local sheets = {}  -- iamgesheets
+	local anims = {}  -- animation description
 
 	for _,v in ipairs(file_list) do
 		if g_step1 and _check_ext(v, ".png") then
@@ -69,9 +69,13 @@ function run(args)
 		end
 	end
 
-	if #imgs > 0 then
-		if g_pack then
+	-- pack raw images onto imagesheet
+	if g_pack and #imgs > 0 then
+		local sheet = image:new_sheet()
+		for _,v in ipairs(imgs) do
+			sheet:pack_img(v)
 		end
+		table.insert(sheets, sheet)
 	end
 
 	if g_step2 then
@@ -86,7 +90,7 @@ function run(args)
 		end
 
 		-- packed images
-		for _,v in ipairs(pimgs) do
+		for _,v in ipairs(sheets) do
 			pkg:add_img(v)
 		end
 
@@ -94,7 +98,7 @@ function run(args)
 		for _,v in ipairs(imgs) do
 			pkg:add_img(v)
 		end
-		
+
 		-- anims read from .a.lua file
 		for _,v in ipairs(anims) do
 			pkg:add_anim(v)
@@ -104,7 +108,11 @@ function run(args)
 		pkg:save(output)
 	end
 
-	for i,v in ipairs(imgs) do
-		v:save(output.."/"..v.name)
+	-- for i,v in ipairs(imgs) do
+	-- 	v:save(output.."/"..v.name)
+	-- end
+
+	for i,v in ipairs(sheets) do
+		v:save(output.."/packed"..tostring(i))
 	end
 end
