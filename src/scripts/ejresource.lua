@@ -6,8 +6,15 @@ local binpacking = require "binpacking"
 local img_mt = {}
 img_mt.__index = img_mt
 
-function img_mt:save(path)  -- ensure no file ext in path string
+function img_mt:save(path, desc)  -- ensure no file ext in path string
 	libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
+	if desc then
+		local lua_path = path..".p.lua"
+		local body = "return {\n\n"
+		body = body..string.format("\t{ \"%s\", 0, 0, %d, %d },\n", self.name, self.w, self.h)
+		body = body.."\n}"
+		libos:writefile(lua_path, body)
+	end
 end
 
 -- image sheet
@@ -37,7 +44,13 @@ function sheet_mt:save(path, desc)  -- ensure no file ext in path string
 	libimage:saveppm(path, self.size, self.size, self.pixfmt, buf)
 
 	if desc then
-		-- TODO
+		local lua_path = path..".p.lua"
+		local body = "return {\n\n"
+		for k,v in pairs(self.imgs) do
+			body = body..string.format("\t{ \"%s\", %d, %d, %d, %d },\n", k.name, v[1], v[2], k.w, k.h)
+		end
+		body = body.."\n}"
+		libos:writefile(lua_path, body)
 	end
 end
 
@@ -50,10 +63,23 @@ function anim_mt:add_action(frames)
 end
 
 function anim_mt:save(path)
-	-- TODO
+	local body = "return {\n\n"
+	for _,action in ipairs(self.actions) do
+		body = body.."{\n"
+		for __,frame in ipairs(action) do
+			body = body.."\t{ "
+			for ___,component in ipairs(frame) do
+				body = body..string.format("\"%s\", ", component)
+			end
+			body = body.."},\n"
+		end
+		body = body.."},\n"
+	end
+	body = body.."\n}"
+	libos:writefile(path, body)
 end
 
--- libimage module
+-- ejoy2d resource module
 local M = {}
 
 function M:load_img(path, name)

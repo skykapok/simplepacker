@@ -223,18 +223,22 @@ function run(args)
 	-- output
 	if config.output_raw then
 		for _,v in ipairs(all_imgs) do
-			v:save(output.."/"..v.name)
+			local path = string.format("%s/%s", output, v.name)
+			v:save(path, true)
 		end
 
 		for i,v in ipairs(all_sheets) do
-			v:save(output.."/imagesheet"..tostring(i), true)
+			local path = string.format("%s/imagesheet%d", output, i)
+			v:save(path, true)
 		end
 
 		for _,v in ipairs(all_anims) do
-			v:save(output.."/"..v.name)
+			local path = string.format("%s/%s.a.lua", output, v.name)
+			v:save(path)
 		end
 	else
-		local pkg = ejpackage:new_pkg("output")
+		local _,_,name = string.find(input, ".-([^\\/]+)$")
+		local pkg = ejpackage:new_pkg(name)
 
 		-- raw images
 		for _,v in ipairs(all_imgs) do
