@@ -1,7 +1,8 @@
 .DS_Store
 
 bin
-test/png_out
+test/*
+!test/input
 
 build/msvc/*.sdf
 build/msvc/*.suo

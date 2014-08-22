@@ -1,5 +1,5 @@
 local libos = require "libos"
-local image = require "image"
+local ejresource = require "ejresource"
 local ejpackage = require "ejpackage"
 
 local usage = [[
@@ -108,7 +108,7 @@ local function _check_anims(imgs)
 			until not found
 
 			if idx > 2 then
-				local anim = image:new_anim(name)
+				local anim = ejresource:new_anim(name)
 				local frames = {}
 				for j=1,idx-1 do
 					table.insert(frames, {name..tostring(j)})
@@ -159,7 +159,7 @@ function run(args)
 		local name = string.sub(v, 1, string.find(v, ".", 1, true) - 1)
 
 		if config.proc_img and _check_ext(v, ".png") then
-			local img = image:load_img(full_name, name)
+			local img = ejresource:load_img(full_name, name)
 			if img then
 				logf("load img %s success (%d,%d)", name, img.w, img.h)
 				table.insert(all_imgs, img)
@@ -169,7 +169,7 @@ function run(args)
 		end
 
 		if _check_ext(v, ".p.lua") then
-			local sheet = image:load_sheet(full_name, name)
+			local sheet = ejresource:load_sheet(full_name, name)
 			if sheet then
 				logf("load sheet %s success", name)
 				table.insert(all_sheets, sheet)
@@ -179,7 +179,7 @@ function run(args)
 		end
 
 		if config.proc_anim and _check_ext(v, ".a.lua") then
-			local anim = image:load_anim(full_name, name)
+			local anim = ejresource:load_anim(full_name, name)
 			if anim then
 				logf("load anim %s success", name)
 				table.insert(all_anims, anim)
@@ -205,7 +205,7 @@ function run(args)
 		for _,v in ipairs(all_imgs) do
 			local sheet = sheet_map[v.pixfmt]
 			if not sheet then
-				sheet = image:new_sheet(config.pack_size, v.pixfmt)
+				sheet = ejresource:new_sheet(config.pack_size, v.pixfmt)
 				sheet_map[v.pixfmt] = sheet
 			end
 			if not sheet:pack_img(v) then
