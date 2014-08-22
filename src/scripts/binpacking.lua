@@ -3,7 +3,7 @@ local bin_mt = {}
 bin_mt.__index = bin_mt
 
 local function _debug(...)
-	print("[BPDEBUG] "..string.format(...))
+	-- print("[BPDEBUG] "..string.format(...))
 end
 
 function bin_mt:_find_node(w, h)

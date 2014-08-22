@@ -6,14 +6,11 @@ local binpacking = require "binpacking"
 local img_mt = {}
 img_mt.__index = img_mt
 
-function img_mt:save(path, desc)  -- ensure no file ext in path string
+function img_mt:save(path)  -- ensure no file ext in path string
 	libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
-	if desc then
-		-- TODO
-	end
 end
 
--- packed image sheet
+-- image sheet
 local sheet_mt = {}
 sheet_mt.__index = sheet_mt
 
@@ -44,6 +41,18 @@ function sheet_mt:save(path, desc)  -- ensure no file ext in path string
 	end
 end
 
+-- animations
+local anim_mt = {}
+anim_mt.__index = anim_mt
+
+function anim_mt:add_action(frames)
+	table.insert(self.actions, frames)
+end
+
+function anim_mt:save(path)
+	-- TODO
+end
+
 -- libimage module
 local M = {}
 
@@ -67,6 +76,21 @@ function M:new_sheet(size, pixfmt)
 	sheet.imgs = {}
 	sheet.bin = binpacking:new_bin(sheet.size, sheet.size)
 	return setmetatable(sheet, sheet_mt)
+end
+
+function M:load_sheet(path, name)
+	-- TODO
+end
+
+function M:new_anim(name)
+	local anim = {}
+	anim.name = name
+	anim.actions = {}
+	return setmetatable(anim, anim_mt)
+end
+
+function M:load_anim(path, name)
+	-- TODO
 end
 
 return M

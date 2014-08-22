@@ -3,29 +3,28 @@ local image = require "image"
 local ejpackage = require "ejpackage"
 
 local usage = [[
-Usage: simplepacker inputdir [-o path] [-ni] [-np] [-ps packsize] [-na] [-mid] [-v]
-	-o: specify output path
-	-ni: no image, ignore raw image files
-	-np: no pack, do not pack raw images to image sheet
-	-ps: specify image sheet pack size, up to 2048. default value is 1024
-	-na: no animation, ignore animation description files(.a.lua)
-	-mid: write all data instead of ejoy2d package
-	      output folder can used as the input to create ejoy2d package
-	-v: show verbose info
+Usage: simplepacker inputdir [-o path] [-ni] [-ps packsize] [-na] [-raw] [-v]
+  -o: specify output directory
+  -ni: no image, ignore raw image files(png) from the input
+  -ps: specify image sheet size, up to 2048. default value is 1024
+  -na: no animation, ignore animation description files(.a.lua)
+  -raw: write down all data instead of exporting a ejoy2d package
+        output folder can used as the input to create ejoy2d package later
+  -v: show verbose log
 ]]
 
--- arguments
-local g_mid = false  -- true for write all data, false for write ejoy2d package
-local g_rimg = true  -- whether to read raw image
-local g_pack = true  -- whether to pack raw iamges
-local g_anim = true  -- whether to read anim
-
-local g_output_path = false
-local g_pack_size = 1024
+-- configuration
+local config = {
+	proc_img = true,  -- whether to read raw image
+	proc_anim = true,  -- whether to read anim
+	output_path = false,
+	pack_size = 1024,
+	output_raw = false,  -- true for write down all data, false for export ejoy2d package
+}
 
 -- log
 local function _logf(...)
-	print("[LUA] "..string.format(...))
+	print("[SCRIPT] "..string.format(...))
 end
 local logf = function (...) end
 
@@ -45,6 +44,7 @@ end
 -- functions
 local function _parse_args(args)
 	if not args[2] then  -- check input path
+		print("require input path")
 		return false
 	end
 
@@ -52,30 +52,34 @@ local function _parse_args(args)
 	while i <= #args do
 		local arg = args[i]
 		if arg == "-o" then
-			g_output_path = args[i + 1]
-			if g_output_path[1] == "-" then
+			local op = args[i + 1]
+			if op[1] == "-" then
+				print("illegal output path")
 				return false
 			end
+			config.output_path = op
 			i = i + 1
 		elseif arg == "-ni" then
-			g_rimg = false
-		elseif arg == "-np" then
-			g_pack = false
+			config.proc_img = false
 		elseif arg == "-ps" then
-			g_pack_size = tonumber(args[i + 1])
-			if g_pack_size <= 0 or g_pack_size > 2048 then
+			local ps = tonumber(args[i + 1])
+			if ps <= 0 or ps > 2048 then
+				print("illegal pack size")
 				return false
 			end
+			config.pack_size = ps
 			i = i + 1
 		elseif arg == "-na" then
-			g_anim = false
-		elseif arg == "-mid" then
-			g_mid = true
+			config.proc_anim = false
+		elseif arg == "-raw" then
+			config.output_raw = true
 		elseif arg == "-v" then
 			logf = _logf
 		else
+			print("illegal argument", arg)
 			return false
 		end
+		i = i + 1
 	end
 
 	return true
@@ -83,7 +87,41 @@ end
 
 local function _check_anims(imgs)
 	local anims = {}
-	-- TODO
+
+	table.sort(imgs, function (a, b)
+			return a.name < b.name
+		end)
+
+	local i = 1
+	while i < #imgs do
+		local _,_,name = string.find(imgs[i].name, "(%a+)1")
+		if name then
+			local idx = 2
+			local found
+			repeat
+				found = false
+				i = i + 1
+				if imgs[i].name == name..tostring(idx) then
+					found = true
+					idx = idx + 1
+				end
+			until not found
+
+			if idx > 2 then
+				local anim = image:new_anim(name)
+				local frames = {}
+				for j=1,idx-1 do
+					table.insert(frames, {name..tostring(j)})
+				end
+				anim:add_action(frames)
+				table.insert(anims, anim)
+				logf("auto create anim %s(%d)", name, idx-1)
+			end
+		else
+			i = i + 1
+		end
+	end
+
 	return anims
 end
 
@@ -98,8 +136,8 @@ function run(args)
 	-- init work path
 	local input = _trim_slash(args[2])
 	local output = input.."_out"
-	if g_output_path then
-		output = _trim_slash(g_output_path)
+	if config.output_path then
+		output = _trim_slash(config.output_path)
 	end
 	libos:makedir(output)
 
@@ -112,83 +150,104 @@ function run(args)
 	end
 
 	-- process input files
-	local imgs = {}  -- raw images, only png supported
-	local sheets = {}  -- iamgesheets
-	local anims = {}  -- animation description
+	local all_imgs = {}  -- raw images, only png supported
+	local all_sheets = {}  -- iamge sheets
+	local all_anims = {}  -- animation description
 
 	for _,v in ipairs(file_list) do
-		if g_rimg and _check_ext(v, ".png") then
-			local name = string.sub(v, 1, -5)
-			local img = image:load_img(input.."/"..v, name)
+		local full_name = input.."/"..v
+		local name = string.sub(v, 1, string.find(v, ".", 1, true) - 1)
+
+		if config.proc_img and _check_ext(v, ".png") then
+			local img = image:load_img(full_name, name)
 			if img then
 				logf("load img %s success (%d,%d)", name, img.w, img.h)
-				table.insert(imgs, img)
+				table.insert(all_imgs, img)
 			else
 				logf("load img %s failed", name)
 			end
 		end
 
 		if _check_ext(v, ".p.lua") then
-			-- TODO
+			local sheet = image:load_sheet(full_name, name)
+			if sheet then
+				logf("load sheet %s success", name)
+				table.insert(all_sheets, sheet)
+			else
+				logf("load sheet %s failed", name)
+			end
 		end
 
-		if g_anim and _check_ext(v, ".a.lua") then
-			-- TODO
+		if config.proc_anim and _check_ext(v, ".a.lua") then
+			local anim = image:load_anim(full_name, name)
+			if anim then
+				logf("load anim %s success", name)
+				table.insert(all_anims, anim)
+			else
+				logf("load anim %s failed", name)
+			end
 		end
 	end
 
 	-- guess anim from image filename
-	if g_anim and #imgs > 0 then
-		local _anims = _check_anims(imgs)
+	if config.proc_anim then
+		local _anims = _check_anims(all_imgs)
 		for _,v in ipairs(_anims) do
-			table.insert(anims, v)
+			table.insert(all_anims, v)
 		end
 	end
 
-	-- pack raw images onto imagesheet
-	if g_pack and #imgs > 0 then
+	-- pack raw images onto image sheet
+	if #all_imgs > 0 then
 		local sheet_map = {}
+		local left_imgs = {}
 
-		for _,v in ipairs(imgs) do
+		for _,v in ipairs(all_imgs) do
 			local sheet = sheet_map[v.pixfmt]
 			if not sheet then
-				sheet = image:new_sheet(g_pack_size, v.pixfmt)
+				sheet = image:new_sheet(config.pack_size, v.pixfmt)
 				sheet_map[v.pixfmt] = sheet
 			end
-			sheet:pack_img(v)
+			if not sheet:pack_img(v) then
+				table.insert(left_imgs, v)
+			end
 		end
 
 		for _,v in pairs(sheet_map) do
-			table.insert(sheets, v)
+			table.insert(all_sheets, v)
 		end
 
-		imgs = {}
+		all_imgs = left_imgs  -- too big for packing
 	end
 
 	-- output
-	if g_mid then
-		for _,v in ipairs(imgs) do
+	if config.output_raw then
+		for _,v in ipairs(all_imgs) do
 			v:save(output.."/"..v.name)
 		end
 
-		for i,v in ipairs(sheets) do
-			v:save(output.."/imagesheet"..tostring(i))
+		for i,v in ipairs(all_sheets) do
+			v:save(output.."/imagesheet"..tostring(i), true)
+		end
+
+		for _,v in ipairs(all_anims) do
+			v:save(output.."/"..v.name)
 		end
 	else
 		local pkg = ejpackage:new_pkg("output")
 
 		-- raw images
-		for _,v in ipairs(imgs) do
+		for _,v in ipairs(all_imgs) do
 			pkg:add_img(v)
 		end
 
 		-- packed images
-		for _,v in ipairs(sheets) do
+		for _,v in ipairs(all_sheets) do
 			pkg:add_sheet(v)
 		end
 
 		-- anims
-		for _,v in ipairs(anims) do
+		for _,v in ipairs(all_anims) do
 			pkg:add_anim(v)
 		end
 

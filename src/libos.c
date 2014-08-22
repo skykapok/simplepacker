@@ -60,7 +60,9 @@ lwritefile(lua_State *L) {
 	const char* content = luaL_checkstring(L, -1);
 
 	FILE* fp = fopen(path, "w");
-	if (!fp) { return 0; }
+	if (!fp) {
+		luaL_error(L, "can't write to %s", path);
+	}
 
 	fprintf(fp, content);
 	fclose(fp);

@@ -133,12 +133,8 @@ lsaveppm(lua_State *L) {
 	// write rgb
 	unsigned char* rgb = (unsigned char*)malloc(w*h * 3);
 	for (int i = 0; i < w*h; ++i) {
-		unsigned int alpha = 255;
-		if (pixfmt == PIXEL_FORMAT_RGBA) {
-			alpha = buf[i * 4 + 3];
-		}
-
-		rgb[i * 3 + 0] = buf[i * 4 + 0] * alpha / 255;  // ejoy2d take rgb as rgb*a when doing alphablend
+		unsigned int alpha = pixfmt == PIXEL_FORMAT_RGBA? buf[i * 4 + 3]:255;
+		rgb[i * 3 + 0] = buf[i * 4 + 0] * alpha / 255;  // ejoy2d uses premultiplied alpha
 		rgb[i * 3 + 1] = buf[i * 4 + 1] * alpha / 255;
 		rgb[i * 3 + 2] = buf[i * 4 + 2] * alpha / 255;
 	}

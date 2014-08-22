@@ -6,6 +6,7 @@ int register_libos(lua_State *L);
 
 int main(int argc, char** argv) {
 	lua_State *L = luaL_newstate();
+
 	luaL_openlibs(L);
 	luaL_requiref(L, "libimage", register_libimage, 0);
 	luaL_requiref(L, "libos", register_libos, 0);
