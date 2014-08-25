@@ -1,8 +1,7 @@
 .DS_Store
 
 bin
-test/*
-!test/input
+test/output
 
 build/msvc/*.sdf
 build/msvc/*.suo
