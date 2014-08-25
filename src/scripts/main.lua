@@ -169,7 +169,7 @@ function run(args)
 		end
 
 		if _check_ext(v, ".p.lua") then
-			local sheet = ejresource:load_sheet(full_name, name)
+			local sheet = ejresource:load_sheet(full_name)
 			if sheet then
 				logf("load sheet %s success", name)
 				table.insert(all_sheets, sheet)

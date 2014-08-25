@@ -2,16 +2,20 @@ local libimage = require "libimage"
 local libos = require "libos"
 local binpacking = require "binpacking"
 
+local TEMPLATE_IMAGE = [[
+	{ name="%s", pos={%d,%d}, size={%d,%d} },
+]]
+
 -- image
 local img_mt = {}
 img_mt.__index = img_mt
 
 function img_mt:save(path, desc)  -- ensure no file ext in path string
 	libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
-	if desc then
+	if desc then  --generate a description file as image sheet
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"
-		body = body..string.format("\t{ \"%s\", 0, 0, %d, %d },\n", self.name, self.w, self.h)
+		body = body..string.format(TEMPLATE_IMAGE, self.name, 0, 0, self.w, self.h)
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
 	end
@@ -22,11 +26,15 @@ local sheet_mt = {}
 sheet_mt.__index = sheet_mt
 
 function sheet_mt:pack_img(img)
-	assert(self.imgs[img] == nil)
+	assert(self.bin)
 
 	local rect = self.bin:insert(img.w + 2, img.h + 2)  -- 2 empty pixel between images
 	if rect then
-		self.imgs[img] = {rect.x + 1, rect.y + 1}
+		local x = rect.x + 1
+		local y = rect.y + 1
+		libimage:blitimg(self.buf, self.size, self.pixfmt, img.buf, img.w, img.h, x, y)
+		local info = {name=img.name, pos={x,y}, size={img.w,img.h}}
+		table.insert(self.imgs, info)
 		return true
 	end
 
@@ -34,20 +42,12 @@ function sheet_mt:pack_img(img)
 end
 
 function sheet_mt:save(path, desc)  -- ensure no file ext in path string
-	-- merge images onto a large texture
-	local buf = libimage:newimg(self.size, self.pixfmt)
-	for k,v in pairs(self.imgs) do
-		libimage:mergeimg(buf, self.size, self.pixfmt, k.buf, k.w, k.h, v[1], v[2])
-	end
-
-	-- save the large merged texture
-	libimage:saveppm(path, self.size, self.size, self.pixfmt, buf)
-
+	libimage:saveppm(path, self.size, self.size, self.pixfmt, self.buf)
 	if desc then
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"
-		for k,v in pairs(self.imgs) do
-			body = body..string.format("\t{ \"%s\", %d, %d, %d, %d },\n", k.name, v[1], v[2], k.w, k.h)
+		for _,v in ipairs(self.imgs) do
+			body = body..string.format(TEMPLATE_IMAGE, v.name, v.pos[1], v.pos[2], v.size[1], v.size[2])
 		end
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
@@ -97,15 +97,25 @@ end
 
 function M:new_sheet(size, pixfmt)
 	local sheet = {}
-	sheet.size = size or 1024
-	sheet.pixfmt = pixfmt or "RGBA"
+	sheet.buf = libimage:newimg(size, pixfmt)
+	sheet.pixfmt = pixfmt
+	sheet.size = size
 	sheet.imgs = {}
-	sheet.bin = binpacking:new_bin(sheet.size, sheet.size)
+	sheet.bin = binpacking:new_bin(size, size)
 	return setmetatable(sheet, sheet_mt)
 end
 
-function M:load_sheet(path, name)
-	-- TODO
+function M:load_sheet(path)
+	local buf, pixfmt, w, h = libimage:loadppm(string.sub(path, 1, -7))
+	if buf then
+		local sheet = {}
+		sheet.buf = buf
+		sheet.pixfmt = pixfmt
+		sheet.size = w
+		sheet.imgs = dofile(path)
+		sheet.bin = false  -- loaded sheet cannot pack in new image
+		return setmetatable(sheet, sheet_mt)
+	end
 end
 
 function M:new_anim(name)
@@ -116,7 +126,10 @@ function M:new_anim(name)
 end
 
 function M:load_anim(path, name)
-	-- TODO
+	local anim = {}
+	anim.name = name
+	anim.actions = dofile(path)
+	return setmetatable(anim, anim_mt)
 end
 
 return M

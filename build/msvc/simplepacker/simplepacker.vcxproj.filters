@@ -4,5 +4,11 @@
     <ClCompile Include="..\..\..\src\libimg.c" />
     <ClCompile Include="..\..\..\src\libos.c" />
     <ClCompile Include="..\..\..\src\main.c" />
+    <ClCompile Include="..\..\..\src\img_ppm.c" />
+    <ClCompile Include="..\..\..\src\img_png.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\img_ppm.h" />
+    <ClInclude Include="..\..\..\src\img_png.h" />
   </ItemGroup>
 </Project>

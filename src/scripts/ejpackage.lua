@@ -37,16 +37,22 @@ local pkg_mt = {}
 pkg_mt.__index = pkg_mt
 
 function pkg_mt:add_img(img)
+	table.insert(self.sheets, img)
+	local item = {}
+	item.type = "picture"
+	item.id = self:_next_id()
+	self.data = {#self.sheets, 0, 0, img.w, img.h}
+	self.items[img.name] = item
 end
 
 function pkg_mt:add_sheet(sheet)
 	table.insert(self.sheets, sheet)
-	for k,v in pairs(sheet.imgs) do
+	for _,v in ipairs(sheet.imgs) do
 		local item = {}
 		item.type = "picture"
 		item.id = self:_next_id()
-		item.data = {#self.sheets, v[1], v[2], k.w, k.h}  -- texid, x, y, w, h
-		self.items[k.name] = item
+		item.data = {#self.sheets, v.pos[1], v.pos[2], v.size[1], v.size[2]}  -- texid, x, y, w, h
+		self.items[v.name] = item
 	end
 end
 

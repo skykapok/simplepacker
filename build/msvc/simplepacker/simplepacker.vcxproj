@@ -11,9 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\img_png.c" />
     <ClCompile Include="..\..\..\src\libimg.c" />
     <ClCompile Include="..\..\..\src\libos.c" />
     <ClCompile Include="..\..\..\src\main.c" />
+    <ClCompile Include="..\..\..\src\img_ppm.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\img_png.h" />
+    <ClInclude Include="..\..\..\src\img_ppm.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E56DC18B-226F-4C3C-B1D7-3455BF327AC7}</ProjectGuid>

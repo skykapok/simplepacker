@@ -1,11 +1,12 @@
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "lualib.h"
 #include "lauxlib.h"
-#include "png.h"
 
-#define PNG_BYTES_TO_CHECK 4
+#include "img_png.h"
+#include "img_ppm.h"
 
 #define PIXEL_FORMAT_UNKNOW 0
 #define PIXEL_FORMAT_RGB 1
@@ -26,139 +27,94 @@ _check_pixel_format(const char* fmt) {
 
 static int
 lloadpng(lua_State *L) {
-	// open file
-	const char* path = luaL_checkstring(L, -1);
-	FILE* fp = fopen(path, "rb");
-	if (!fp) { return 0; }
+	const char* fn = luaL_checkstring(L, -1);
 
-	// init libpng
-	png_structp png_ptr;
-	png_infop info_ptr;
-	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-	info_ptr = png_create_info_struct(png_ptr);
-	setjmp(png_jmpbuf(png_ptr));
+	struct png png;
+	int ok = img_loadpng(fn, &png);
 
-	// check png legality
-	int temp;
-	char temp2[PNG_BYTES_TO_CHECK];
-
-	temp = fread(temp2, 1, PNG_BYTES_TO_CHECK, fp);
-	if (temp < PNG_BYTES_TO_CHECK) {
-		fclose(fp);
-		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
+	if (!ok) {
 		return 0;
 	}
 
-	temp = png_sig_cmp((png_bytep)temp2, (png_size_t)0, PNG_BYTES_TO_CHECK);
-	if (temp != 0) {
-		fclose(fp);
-		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		return 0;
+	int sz = png.width * png.height * png.channel;
+	uint8_t* buf = lua_newuserdata(L, sz);
+	memcpy(buf, png.buffer, sz);
+	free(png.buffer);
+
+	switch (png.type)
+	{
+	case PNG_RGBA:
+		lua_pushstring(L, "RGBA");
+		break;
+
+	case PNG_RGB:
+		lua_pushstring(L, "RGB");
+		break;
+
+	default:
+		break;
 	}
 
-	// read png data
-	rewind(fp);
-	png_init_io(png_ptr, fp);
-	png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND, 0);
+	lua_pushnumber(L, png.width);
+	lua_pushnumber(L, png.height);
 
-	// get image info
-	int w = png_get_image_width(png_ptr, info_ptr);
-	int h = png_get_image_height(png_ptr, info_ptr);
-	int color_type = png_get_color_type(png_ptr, info_ptr);
-
-	png_bytep* row_pointers = png_get_rows(png_ptr, info_ptr);
-	unsigned char* buf = NULL;
-
-	switch (color_type) {
-		case PNG_COLOR_TYPE_RGB_ALPHA:
-			buf = (unsigned char*)lua_newuserdata(L, w*h * 4);
-			for (int i = 0; i < h; ++i) {
-				for (int j = 0; j < w; ++j) {
-					int k = (i*w + j) * 4;
-					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red
-					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green
-					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue
-					buf[k + 3] = row_pointers[i][j * 4 + 3]; // alpha
-				}
-			}
-			lua_pushstring(L, "RGBA");
-			break;
-
-		case PNG_COLOR_TYPE_RGB:
-			buf = (unsigned char*)lua_newuserdata(L, w*h * 3);
-			for (int i = 0; i < h; ++i) {
-				for (int j = 0; j < w; ++j) {
-					int k = (i*w + j) * 3;
-					buf[k + 0] = row_pointers[i][j * 4 + 0]; // red
-					buf[k + 1] = row_pointers[i][j * 4 + 1]; // green
-					buf[k + 2] = row_pointers[i][j * 4 + 2]; // blue
-				}
-			}
-			lua_pushstring(L, "RGB");
-			break;
-
-		default:
-			fclose(fp);
-			png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-			return 0;
-	}
-
-	png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-
-	lua_pushnumber(L, w);
-	lua_pushnumber(L, h);
 	return 4;  // buf, color_type, w, h
 }
 
 static int
+lloadppm(lua_State *L) {
+	const char* fn = luaL_checkstring(L, -1);  // filename without extension
+
+	struct ppm ppm;
+	int ok = img_loadppm(fn, &ppm);
+
+	if (!ok) {
+		return 0;
+	}
+
+	int sz = ppm.width * ppm.height * ppm.step;
+	uint8_t* buf = lua_newuserdata(L, sz);
+	memcpy(buf, ppm.buffer, sz);
+	free(ppm.buffer);
+
+	switch (ppm.type)
+	{
+	case PPM_RGBA8:
+		lua_pushstring(L, "RGBA");
+		break;
+
+	case PPM_RGB8:
+		lua_pushstring(L, "RGB");
+		break;
+
+	default:
+		lua_pop(L, 1);
+		return 0;
+	}
+
+	lua_pushnumber(L, ppm.width);
+	lua_pushnumber(L, ppm.height);
+
+	return 4;
+}
+
+static int
 lsaveppm(lua_State *L) {
-	// check args
-	const char* path = luaL_checkstring(L, -5);  // filename without extension
+	const char* fn = luaL_checkstring(L, -5);  // filename without extension
 	int w = luaL_checkint(L, -4);
 	int h = luaL_checkint(L, -3);
 	int pixfmt = _check_pixel_format(luaL_checkstring(L, -2));
-	unsigned char* buf = lua_touserdata(L, -1);
+	uint8_t* buf = (uint8_t*)lua_touserdata(L, -1);
 
-	char fn[512];
-	FILE *fp;
-
-	// open file for rgb channel
-	sprintf(fn, "%s.ppm", path);
-	fp = fopen(fn, "wb");
-	if (!fp) { luaL_error(L, "can't write to %s", fn); }
-
-	// ppm header
-	fprintf(fp, "P6\n%d %d\n255\n", w, h);
-
-	// write rgb
-	unsigned char* rgb = (unsigned char*)malloc(w*h * 3);
-	for (int i = 0; i < w*h; ++i) {
-		unsigned int alpha = pixfmt == PIXEL_FORMAT_RGBA? buf[i * 4 + 3]:255;
-		rgb[i * 3 + 0] = buf[i * 4 + 0] * alpha / 255;  // ejoy2d uses premultiplied alpha
-		rgb[i * 3 + 1] = buf[i * 4 + 1] * alpha / 255;
-		rgb[i * 3 + 2] = buf[i * 4 + 2] * alpha / 255;
+	int ok = 0;
+	if (pixfmt == PIXEL_FORMAT_RGB) {
+		ok = img_saveppm(fn, PPM_RGB8, w, h, buf);
+	} else if (pixfmt == PIXEL_FORMAT_RGBA) {
+		ok = img_saveppm(fn, PPM_RGBA8, w, h, buf);
 	}
-	fwrite(rgb, 3, w*h, fp);
-	fclose(fp);
-	free(rgb);
 
-	if (pixfmt == PIXEL_FORMAT_RGBA) {
-		// open files for alpha channel
-		sprintf(fn, "%s.pgm", path);
-		fp = fopen(fn, "wb");
-		if (fp == NULL) { luaL_error(L, "can't write to %s", fn); }
-
-		// pgm header
-		fprintf(fp, "P5\n%d %d\n255\n", w, h);
-
-		// write alpha
-		unsigned char* alpha = (unsigned char*)malloc(w*h);
-		for (int i = 0; i < w*h; ++i) {
-			alpha[i] = buf[i * 4 + 3];
-		}
-		fwrite(alpha, 1, w*h, fp);
-		fclose(fp);
-		free(alpha);
+	if (!ok) {
+		luaL_error(L, "save ppm failed");
 	}
 
 	return 0;
@@ -168,7 +124,7 @@ static int
 lnewimg(lua_State *L) {
 	int s = luaL_checkint(L, -2);
 	int pixfmt = _check_pixel_format(luaL_checkstring(L, -1));
-	unsigned char* buf = NULL;
+	uint8_t* buf = NULL;
 	int buf_size = 0;
 
 	switch (pixfmt) {
@@ -192,16 +148,16 @@ lnewimg(lua_State *L) {
 }
 
 static int
-lmergeimg(lua_State *L) {
+lblitimg(lua_State *L) {
 	// parse arguments
 	int y = luaL_checkint(L, -1);
 	int x = luaL_checkint(L, -2);
 	int src_h = luaL_checkint(L, -3);
 	int src_w = luaL_checkint(L, -4);
-	unsigned char* src = lua_touserdata(L, -5);
+	uint8_t* src = lua_touserdata(L, -5);
 	int pixfmt = _check_pixel_format(luaL_checkstring(L, -6));
 	int dst_s = luaL_checkint(L, -7);
-	unsigned char* dst = lua_touserdata(L, -8);
+	uint8_t* dst = lua_touserdata(L, -8);
 
 	switch (pixfmt) {  // copy pixels
 	case PIXEL_FORMAT_RGB:
@@ -241,9 +197,10 @@ int
 register_libimage(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "loadpng", lloadpng },
+		{ "loadppm", lloadppm },
 		{ "saveppm", lsaveppm },
 		{ "newimg", lnewimg },
-		{ "mergeimg", lmergeimg },
+		{ "blitimg", lblitimg },
 		{ NULL, NULL }
 	};
 
