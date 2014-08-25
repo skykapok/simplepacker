@@ -51,10 +51,12 @@ function M:create_matrix(scale, rot, trans)
 	end
 
 	local ret = self:_matrix_multiply(self:_matrix_multiply(s, r), t)
-
-	for i,v in ipairs(ret) do
-		ret[i] = math.floor(v * 1024)
-	end
+	ret[1] = math.floor(ret[1] * 1024)
+	ret[2] = math.floor(ret[2] * 1024)
+	ret[3] = math.floor(ret[3] * 1024)
+	ret[4] = math.floor(ret[4] * 1024)
+	ret[5] = math.floor(ret[5] * 16)
+	ret[6] = math.floor(ret[6] * 16)
 
 	return ret
 end

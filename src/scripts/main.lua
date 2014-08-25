@@ -88,7 +88,7 @@ local function _check_anims(imgs)
 		end)
 
 	local i = 1
-	while i < #imgs do
+	while i <= #imgs do
 		local _,_,name = string.find(imgs[i].name, "(%a+)1")
 		if name then
 			local idx = 2
@@ -96,6 +96,9 @@ local function _check_anims(imgs)
 			repeat
 				found = false
 				i = i + 1
+				if i > #imgs then
+					break
+				end
 				if imgs[i].name == name..tostring(idx) then
 					found = true
 					idx = idx + 1
@@ -106,7 +109,7 @@ local function _check_anims(imgs)
 				local anim = ejresource:new_anim(name)
 				local frames = {}
 				for j=1,idx-1 do
-					table.insert(frames, {{pic=name..tostring(j)}})
+					table.insert(frames, {{name=name..tostring(j)}})
 				end
 				anim:add_action(frames)
 				table.insert(anims, anim)

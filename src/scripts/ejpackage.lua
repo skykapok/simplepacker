@@ -119,32 +119,32 @@ function pkg_mt:_serialize_animation(id, name, data)
 		for _,frm in ipairs(act) do  -- multiple frames in one action
 			local com_list = {}
 			for _,com in ipairs(frm) do  -- multiple components in one frame
-				if not com2idx[com.pic] then
-					table.insert(idx2com, com.pic)
-					com2idx[com.pic] = #idx2com - 1  -- idx base 0
+				if not com2idx[com.name] then
+					table.insert(idx2com, com.name)
+					com2idx[com.name] = #idx2com - 1  -- idx base 0
 				end
 
 				local idx_only = true
 
-				local str_com = string.format("{ index=%d, ", com2idx[com.pic])
+				local str_com = string.format("{ index = %d, ", com2idx[com.name])
 				if com.scale or com.rot or com.trans then
 					idx_only = false
 					local mat = utils:create_matrix(com.scale, com.rot, com.trans)
-					str_com = str_com..string.format("mat={%d,%d,%d,%d,%d,%d}, ",
+					str_com = str_com..string.format("mat = { %d, %d, %d, %d, %d, %d }, ",
 						mat[1], mat[2], mat[3], mat[4], mat[5], mat[6])
 				end
 				if com.color then
 					idx_only = false
-					str_com = str_com..string.format("color=0x%x", com.color)
+					str_com = str_com..string.format("color = 0x%08x", com.color)
 				end
 				if com.additive then
 					idx_only = false
-					str_com = str_com..string.format("additive=0x%x", com.additive)
+					str_com = str_com..string.format("additive = 0x%08x", com.additive)
 				end
 				str_com = str_com.."}"
 
 				if idx_only then
-					table.insert(com_list, tostring(com2idx[com.pic]))  -- simple component without attributes
+					table.insert(com_list, tostring(com2idx[com.name]))  -- simple component without attributes
 				else
 					table.insert(com_list, str_com)
 				end
