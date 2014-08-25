@@ -64,12 +64,28 @@ end
 
 function anim_mt:save(path)
 	local body = "return {\n\n"
-	for _,action in ipairs(self.actions) do
+	for _,act in ipairs(self.actions) do
 		body = body.."{\n"
-		for __,frame in ipairs(action) do
+		for _,frm in ipairs(act) do
 			body = body.."\t{ "
-			for ___,component in ipairs(frame) do
-				body = body..string.format("\"%s\", ", component)
+			for _,com in ipairs(frm) do
+				body = body..string.format("{ pic=\"%s\", ", com.pic)
+				if com.scale then
+					body = body..string.format("scale={%d,%d}, ", com.scale[1], com.scale[2])
+				end
+				if com.rot then
+					body = body..string.format("rot=%d, ", com.rot)
+				end
+				if com.trans then
+					body = body..string.format("trans={%d,%d}, ", com.trans[1], com.trans[2])
+				end
+				if com.color then
+					body = body..string.format("color=0x%x, ", com.color)
+				end
+				if com.additive then
+					body = body..string.format("additive=0x%x, ", com.additive)
+				end
+				body = body.."}, "
 			end
 			body = body.."},\n"
 		end

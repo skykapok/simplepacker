@@ -1,4 +1,5 @@
 local libos = require "libos"
+local utils = require "utils"
 
 -- file templates
 local TEMPLATE_BODY = [[
@@ -113,34 +114,58 @@ function pkg_mt:_serialize_animation(id, name, data)
 
 	local str_a = ""  -- action section
 
-	for _,action in ipairs(data) do
-		str_a = str_a.."\t{\n"  -- start a new action
-		for __,frame in ipairs(action) do
+	for _,act in ipairs(data) do
+		local frame_list = {}
+		for _,frm in ipairs(act) do  -- multiple frames in one action
 			local com_list = {}
-			for ___,component in ipairs(frame) do
-				if not com2idx[component] then
-					table.insert(idx2com, component)
-					com2idx[component] = #idx2com - 1  -- idx base 0
+			for _,com in ipairs(frm) do  -- multiple components in one frame
+				if not com2idx[com.pic] then
+					table.insert(idx2com, com.pic)
+					com2idx[com.pic] = #idx2com - 1  -- idx base 0
 				end
-				table.insert(com_list, com2idx[component])
+
+				local idx_only = true
+
+				local str_com = string.format("{ index=%d, ", com2idx[com.pic])
+				if com.scale or com.rot or com.trans then
+					idx_only = false
+					local mat = utils:create_matrix(com.scale, com.rot, com.trans)
+					str_com = str_com..string.format("mat={%d,%d,%d,%d,%d,%d}, ",
+						mat[1], mat[2], mat[3], mat[4], mat[5], mat[6])
+				end
+				if com.color then
+					idx_only = false
+					str_com = str_com..string.format("color=0x%x", com.color)
+				end
+				if com.additive then
+					idx_only = false
+					str_com = str_com..string.format("additive=0x%x", com.additive)
+				end
+				str_com = str_com.."}"
+
+				if idx_only then
+					table.insert(com_list, tostring(com2idx[com.pic]))  -- simple component without attributes
+				else
+					table.insert(com_list, str_com)
+				end
 			end
-			local str_f = "\t\t{ "  -- start a new frame line
-			for i,v in ipairs(com_list) do
-				str_f = str_f..tostring(v)..", "  -- append component on this line
-			end
-			str_f = str_f.."},\n"  -- close frame line
-			str_a = str_a..str_f  -- add frame to action, one frame one line
+			local str_f = string.format("\t\t{ %s },", table.concat(com_list, ", "))
+			table.insert(frame_list, str_f)
 		end
-		str_a = str_a.."\t},"  -- close action
+		str_a = string.format("\t{\n%s\n\t},", table.concat(frame_list, "\n"))
 	end
 
 	local str_c = ""  -- component section
-	for _,component in ipairs(idx2com) do
-		local item = self.items[component]
+	for _,com in ipairs(idx2com) do
+		local item = self.items[com]
 		str_c = string.format("%s\t\t{ id = %d },\n", str_c, item.id)  -- one component one line
 	end
 
 	return string.format(TEMPLATE_ANIMATION, id, name, str_c, str_a)
+end
+
+function pkg_mt:_get_matrix(scale, rot, trans)
+	return {1024, 0, 0, 1024, 0, 0}
 end
 
 function pkg_mt:_next_id()

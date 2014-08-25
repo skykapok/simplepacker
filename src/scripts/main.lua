@@ -1,6 +1,7 @@
 local libos = require "libos"
 local ejresource = require "ejresource"
 local ejpackage = require "ejpackage"
+local utils = require "utils"
 
 local usage = [[
 Usage: simplepacker inputdir [-o path] [-ni] [-ps packsize] [-na] [-raw] [-v]
@@ -21,12 +22,6 @@ local config = {
 	pack_size = 1024,
 	output_raw = false,  -- true for write down all data, false for export ejoy2d package
 }
-
--- log
-local function _logf(...)
-	print("[SCRIPT] "..string.format(...))
-end
-local logf = function (...) end
 
 -- helpers
 local function _check_ext(file_name, ext)
@@ -74,7 +69,7 @@ local function _parse_args(args)
 		elseif arg == "-raw" then
 			config.output_raw = true
 		elseif arg == "-v" then
-			logf = _logf
+			utils:enable_log()
 		else
 			print("illegal argument", arg)
 			return false
@@ -111,11 +106,11 @@ local function _check_anims(imgs)
 				local anim = ejresource:new_anim(name)
 				local frames = {}
 				for j=1,idx-1 do
-					table.insert(frames, {name..tostring(j)})
+					table.insert(frames, {{pic=name..tostring(j)}})
 				end
 				anim:add_action(frames)
 				table.insert(anims, anim)
-				logf("auto create anim %s(%d)", name, idx-1)
+				utils:logf("auto create anim %s(%d)", name, idx-1)
 			end
 		else
 			i = i + 1
@@ -144,7 +139,7 @@ function run(args)
 	-- walk input folder
 	local file_list = libos.walkdir(input)
 	if not file_list then
-		logf("error input path")
+		utils:logf("error input path")
 		print(usage)
 		return
 	end
@@ -161,30 +156,30 @@ function run(args)
 		if config.proc_img and _check_ext(v, ".png") then
 			local img = ejresource:load_img(full_name, name)
 			if img then
-				logf("load img %s success (%d,%d)", name, img.w, img.h)
+				utils:logf("load img %s success (%d,%d)", name, img.w, img.h)
 				table.insert(all_imgs, img)
 			else
-				logf("load img %s failed", name)
+				utils:logf("load img %s failed", name)
 			end
 		end
 
 		if _check_ext(v, ".p.lua") then
 			local sheet = ejresource:load_sheet(full_name)
 			if sheet then
-				logf("load sheet %s success", name)
+				utils:logf("load sheet %s success", name)
 				table.insert(all_sheets, sheet)
 			else
-				logf("load sheet %s failed", name)
+				utils:logf("load sheet %s failed", name)
 			end
 		end
 
 		if config.proc_anim and _check_ext(v, ".a.lua") then
 			local anim = ejresource:load_anim(full_name, name)
 			if anim then
-				logf("load anim %s success", name)
+				utils:logf("load anim %s success", name)
 				table.insert(all_anims, anim)
 			else
-				logf("load anim %s failed", name)
+				utils:logf("load anim %s failed", name)
 			end
 		end
 	end
