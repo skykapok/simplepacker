@@ -38,7 +38,7 @@ local pkg_mt = {}
 pkg_mt.__index = pkg_mt
 
 function pkg_mt:add_img(img)
-	table.insert(self.sheets, img)
+	table.insert(self.sheets, img)  -- treat image as sheet with a single rect
 	local item = {}
 	item.type = "picture"
 	item.id = self:_next_id()
@@ -88,6 +88,8 @@ function pkg_mt:save(path)
 	local all = string.format(TEMPLATE_BODY, body)
 	local lua_path = string.format("%s/%s.lua", path, self.name)
 	libos:writefile(lua_path, all)
+
+	utils:logf("ejoy2d package <%s> saved", self.name)
 end
 
 function pkg_mt:_serialize_picture(id, name, data)
@@ -162,10 +164,6 @@ function pkg_mt:_serialize_animation(id, name, data)
 	end
 
 	return string.format(TEMPLATE_ANIMATION, id, name, str_c, str_a)
-end
-
-function pkg_mt:_get_matrix(scale, rot, trans)
-	return {1024, 0, 0, 1024, 0, 0}
 end
 
 function pkg_mt:_next_id()

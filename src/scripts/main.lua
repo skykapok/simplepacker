@@ -23,19 +23,6 @@ local config = {
 	output_raw = false,  -- true for write down all data, false for export ejoy2d package
 }
 
--- helpers
-local function _check_ext(file_name, ext)
-	return string.find(file_name, ext, 1, true) == #file_name - #ext + 1
-end
-
-local function _trim_slash(path)
-	if path[#path] == "\\" or path[#path] == "/" then
-		return string.sub(path, 1, -2)
-	else
-		return path
-	end
-end
-
 -- functions
 local function _parse_args(args)
 	if not args[2] then  -- check input path
@@ -83,17 +70,17 @@ end
 local function _check_anims(imgs)
 	local anims = {}
 
-	table.sort(imgs, function (a, b)
-			return a.name < b.name
-		end)
+	-- sort by image name
+	table.sort(imgs, function (a, b) return a.name < b.name end)
 
 	local i = 1
 	while i <= #imgs do
+		-- find image name like xxx1
 		local _,_,name = string.find(imgs[i].name, "(%a+)1")
 		if name then
 			local idx = 2
 			local found
-			repeat
+			repeat  -- find the whole sequence
 				found = false
 				i = i + 1
 				if i > #imgs then
@@ -109,7 +96,8 @@ local function _check_anims(imgs)
 				local anim = ejresource:new_anim(name)
 				local frames = {}
 				for j=1,idx-1 do
-					table.insert(frames, {{name=name..tostring(j)}})
+					local com = {name=name..tostring(j)}  -- name only, no other attributes
+					table.insert(frames, {com})
 				end
 				anim:add_action(frames)
 				table.insert(anims, anim)
@@ -132,10 +120,10 @@ function run(args)
 	end
 
 	-- init work path
-	local input = _trim_slash(args[2])
+	local input = utils:trim_slash(args[2])
 	local output = input.."_out"
 	if config.output_path then
-		output = _trim_slash(config.output_path)
+		output = utils:trim_slash(config.output_path)
 	end
 	libos:makedir(output)
 
@@ -154,9 +142,9 @@ function run(args)
 
 	for _,v in ipairs(file_list) do
 		local full_name = input.."/"..v
-		local name = string.sub(v, 1, string.find(v, ".", 1, true) - 1)
+		local name = string.sub(v, 1, string.find(v, ".", 1, true) - 1)  -- name is the filename without ext
 
-		if config.proc_img and _check_ext(v, ".png") then
+		if config.proc_img and utils:check_ext(v, ".png") then
 			local img = ejresource:load_img(full_name, name)
 			if img then
 				utils:logf("load img %s success (%d,%d)", name, img.w, img.h)
@@ -166,7 +154,7 @@ function run(args)
 			end
 		end
 
-		if _check_ext(v, ".p.lua") then
+		if utils:check_ext(v, ".p.lua") then
 			local sheet = ejresource:load_sheet(full_name)
 			if sheet then
 				utils:logf("load sheet %s success", name)
@@ -176,7 +164,7 @@ function run(args)
 			end
 		end
 
-		if config.proc_anim and _check_ext(v, ".a.lua") then
+		if config.proc_anim and utils:check_ext(v, ".a.lua") then
 			local anim = ejresource:load_anim(full_name, name)
 			if anim then
 				utils:logf("load anim %s success", name)
@@ -189,8 +177,8 @@ function run(args)
 
 	-- guess anim from image filename
 	if config.proc_anim then
-		local _anims = _check_anims(all_imgs)
-		for _,v in ipairs(_anims) do
+		local anims = _check_anims(all_imgs)
+		for _,v in ipairs(anims) do
 			table.insert(all_anims, v)
 		end
 	end
@@ -201,13 +189,18 @@ function run(args)
 		local left_imgs = {}
 
 		for _,v in ipairs(all_imgs) do
-			local sheet = sheet_map[v.pixfmt]
+			local pixfmt = v.pixfmt
+			local sheet = sheet_map[pixfmt]
 			if not sheet then
-				sheet = ejresource:new_sheet(config.pack_size, v.pixfmt)
-				sheet_map[v.pixfmt] = sheet
+				sheet = ejresource:new_sheet(config.pack_size, pixfmt)
+				sheet_map[pixfmt] = sheet
+				utils:logf("create a new image sheet with format %s", pixfmt)
 			end
 			if not sheet:pack_img(v) then
 				table.insert(left_imgs, v)
+				utils:logf("pack image %s failed", v.name)
+			else
+				utils:logf("pack image %s success", v.name)
 			end
 		end
 
@@ -215,14 +208,16 @@ function run(args)
 			table.insert(all_sheets, v)
 		end
 
-		all_imgs = left_imgs  -- too big for packing
+		all_imgs = left_imgs  -- too big to pack
 	end
 
 	-- output
 	if config.output_raw then
+		utils:logf("export all data to a detailed format")
+
 		for _,v in ipairs(all_imgs) do
 			local path = string.format("%s/%s", output, v.name)
-			v:save(path, true)
+			v:save(path, true)  -- image save as image sheet
 		end
 
 		for i,v in ipairs(all_sheets) do
@@ -237,6 +232,8 @@ function run(args)
 	else
 		local _,_,name = string.find(input, ".-([^\\/]+)$")
 		local pkg = ejpackage:new_pkg(name)
+
+		utils:logf("export ejoy2d package %s", name)
 
 		-- raw images
 		for _,v in ipairs(all_imgs) do

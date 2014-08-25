@@ -1,7 +1,9 @@
 local libimage = require "libimage"
 local libos = require "libos"
 local binpacking = require "binpacking"
+local utils = require "utils"
 
+-- file templates
 local TEMPLATE_IMAGE = [[
 	{ name="%s", pos={%d,%d}, size={%d,%d} },
 ]]
@@ -19,6 +21,8 @@ function img_mt:save(path, desc)  -- ensure no file ext in path string
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
 	end
+
+	utils:logf("image <%s> saved", self.name)
 end
 
 -- image sheet
@@ -52,6 +56,8 @@ function sheet_mt:save(path, desc)  -- ensure no file ext in path string
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
 	end
+
+	utils:logf("image sheet saved")
 end
 
 -- animations
@@ -65,9 +71,9 @@ end
 function anim_mt:save(path)
 	local body = "return {\n\n"
 	for _,act in ipairs(self.actions) do
-		body = body.."{\n"
+		body = body.."{\n"  -- start a new action
 		for _,frm in ipairs(act) do
-			body = body.."\t{ "
+			body = body.."\t{ "  -- start a new frame
 			for _,com in ipairs(frm) do
 				body = body..string.format("{ name=\"%s\", ", com.name)
 				if com.scale then
@@ -93,6 +99,8 @@ function anim_mt:save(path)
 	end
 	body = body.."\n}"
 	libos:writefile(path, body)
+
+	utils:logf("animation <%s> saved", self.name)
 end
 
 -- ejoy2d resource module
@@ -123,6 +131,7 @@ end
 
 function M:load_sheet(path)
 	local buf, pixfmt, w, h = libimage:loadppm(string.sub(path, 1, -7))
+	if w ~= h then return end  -- image sheet must be a square
 	if buf then
 		local sheet = {}
 		sheet.buf = buf
