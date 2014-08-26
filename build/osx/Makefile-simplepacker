@@ -1,0 +1,37 @@
+# Makefile for simplepacker
+
+LUALIB = $(DIR_OUTPUT_LUA)
+LUAINC = $(DIR_HOME)/3rd/lua
+ZLIBLIB = $(DIR_OUTPUT_ZLIB)
+ZLIBINC = $(DIR_HOME)/3rd/zlib
+LIBPNGLIB = $(DIR_OUTPUT_LIBPNG)
+LIBPNGINC = $(DIR_HOME)/3rd/libpng
+
+CC = cc
+AR = ar
+CPPFLAGS = -I$(LUAINC) -I$(ZLIBINC) -I$(LIBPNGINC)
+CFLAGS = -O -DOSX
+LDFLAGS = -L$(LUALIB) -L$(ZLIBLIB) -L$(LIBPNGLIB) -llua -lpng -lz
+
+TARGETS = \
+	img_png.o \
+	img_ppm.o \
+	libimg.o \
+	libos.o \
+	main.o
+OBJS = $(addprefix $(DIR_OUTPUT_SIMPLEPACKER)/, $(TARGETS))
+BIN = $(DIR_OUTPUT_SIMPLEPACKER)/simplepacker
+
+all: $(BIN)
+
+$(BIN): $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $(OBJS)
+
+$(DIR_OUTPUT_SIMPLEPACKER)/%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+.PHONY: all
+
+img_png.o: img_png.h
+img_ppm.o: img_ppm.h
+libimg.o: img_png.h img_ppm.h

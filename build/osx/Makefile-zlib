@@ -1,0 +1,31 @@
+# Makefile for zlib
+
+CC = cc
+AR = ar
+RANLIB = ranlib
+CFLAGS = -O -DZ_SOLO
+ARFLAGS = rc
+
+TARGETS = \
+	adler32.o \
+	crc32.o \
+	deflate.o \
+	infback.o \
+	inffast.o \
+	inflate.o \
+	inftrees.o \
+	trees.o \
+	zutil.o
+OBJS = $(addprefix $(DIR_OUTPUT_ZLIB)/, $(TARGETS))
+LIBS = $(DIR_OUTPUT_ZLIB)/libz.a
+
+all: $(LIBS)
+
+$(LIBS): $(OBJS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RANLIB) $@
+
+$(DIR_OUTPUT_ZLIB)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: all

@@ -1,0 +1,54 @@
+# Makefile for Lua
+
+CC = cc
+AR = ar
+RANLIB = ranlib
+CFLAGS = -O -DLUA_COMPAT_ALL -DLUA_USE_MACOSX
+ARFLAGS = rcu
+
+TARGETS = \
+	lapi.o \
+	lcode.o \
+	lctype.o \
+	ldebug.o \
+	ldo.o \
+	ldump.o \
+	lfunc.o \
+	lgc.o \
+	llex.o \
+	lmem.o \
+	lobject.o \
+	lopcodes.o \
+	lparser.o \
+	lstate.o \
+	lstring.o \
+	ltable.o \
+	ltm.o \
+	lundump.o \
+	lvm.o \
+	lzio.o \
+	lauxlib.o \
+	lbaselib.o \
+	lbitlib.o \
+	lcorolib.o \
+	ldblib.o \
+	liolib.o \
+	lmathlib.o \
+	loslib.o \
+	lstrlib.o \
+	ltablib.o \
+	loadlib.o \
+	linit.o
+OBJS = $(addprefix $(DIR_OUTPUT_LUA)/, $(TARGETS))
+LIBS = $(DIR_OUTPUT_LUA)/liblua.a
+
+all: $(LIBS)
+
+$(LIBS): $(OBJS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RANLIB) $@
+
+$(DIR_OUTPUT_LUA)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: all

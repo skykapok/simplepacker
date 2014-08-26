@@ -1,0 +1,42 @@
+# Makefile for libpng
+
+ZLIBLIB = $(DIR_OUTPUT_ZLIB)
+ZLIBINC = $(DIR_HOME)/3rd/zlib
+
+CC = cc
+AR = ar
+RANLIB = ranlib
+CPPFLAGS = -I$(ZLIBINC)
+CFLAGS = -O
+ARFLAGS = rc
+LDFLAGS = -L$(ZLIBLIB) -lz
+
+TARGETS = \
+	png.o \
+	pngset.o \
+	pngget.o \
+	pngrutil.o \
+	pngtrans.o \
+	pngwutil.o \
+	pngread.o \
+	pngrio.o \
+	pngwio.o \
+	pngwrite.o \
+	pngrtran.o \
+	pngwtran.o \
+	pngmem.o \
+	pngerror.o \
+	pngpread.o
+OBJS = $(addprefix $(DIR_OUTPUT_LIBPNG)/, $(TARGETS))
+LIBS = $(DIR_OUTPUT_LIBPNG)/libpng.a
+
+all: $(LIBS)
+
+$(LIBS): $(OBJS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RANLIB) $@
+
+$(DIR_OUTPUT_LIBPNG)/%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+.PHONY: all
