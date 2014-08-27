@@ -10,6 +10,7 @@ int main(int argc, char** argv) {
 	luaL_openlibs(L);
 	luaL_requiref(L, "libimage", register_libimage, 0);
 	luaL_requiref(L, "libos", register_libos, 0);
+	lua_pop(L, 2);
 
 	if (luaL_dofile(L, "main.lua") != LUA_OK) {
 		printf("====== load script failed ======\n%s\n", lua_tostring(L, -1));

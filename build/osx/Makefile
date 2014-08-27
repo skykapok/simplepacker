@@ -16,6 +16,7 @@ simplepacker: lua libpng
 	-@if [ ! -d $(DIR_OUTPUT_SIMPLEPACKER) ]; then mkdir -p $(DIR_OUTPUT_SIMPLEPACKER); fi
 	make -C $(DIR_HOME)/src/ -f $(DIR_MAKE)/Makefile-simplepacker
 	cp $(DIR_HOME)/src/scripts/*.lua $(DIR_OUTPUT_SIMPLEPACKER)
+	@echo [Build simplepacker finish]
 
 lua:
 	-@if [ ! -d $(DIR_OUTPUT_LUA) ]; then mkdir -p $(DIR_OUTPUT_LUA); fi
@@ -31,7 +32,9 @@ zlib:
 
 test:
 	cd $(DIR_OUTPUT_SIMPLEPACKER); \
-		./simplepacker $(DIR_HOME)/test/input -o $(DIR_HOME)/test/output
+		./simplepacker $(DIR_HOME)/test/input -o $(DIR_HOME)/test/output -ps 512 -v; \
+		./simplepacker $(DIR_HOME)/test/input_advance -o $(DIR_HOME)/test/output -v
+	@echo [Run tests finish]
 
 clean:
 	rm -rf $(DIR_MAKE)/_build

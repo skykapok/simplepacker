@@ -42,7 +42,7 @@ function pkg_mt:add_img(img)
 	local item = {}
 	item.type = "picture"
 	item.id = self:_next_id()
-	self.data = {#self.sheets, 0, 0, img.w, img.h}
+	item.data = {#self.sheets, 0, 0, img.w, img.h}
 	self.items[img.name] = item
 end
 
@@ -160,6 +160,7 @@ function pkg_mt:_serialize_animation(id, name, data)
 	local str_c = ""  -- component section
 	for _,com in ipairs(idx2com) do
 		local item = self.items[com]
+		assert(item, "item <"..com.."> not exist, refered in animation <"..self.name..">")
 		str_c = string.format("%s\t\t{ id = %d },\n", str_c, item.id)  -- one component one line
 	end
 
