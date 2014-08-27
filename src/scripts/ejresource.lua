@@ -119,8 +119,8 @@ function M:load_img(path, name)
 			buf = buf_trim
 			w = w - l - r
 			h = h - t - b
-			ox = l
-			oy = t
+			ox = (r - l) / 2
+			oy = (t - b) / 2
 		end
 	end
 

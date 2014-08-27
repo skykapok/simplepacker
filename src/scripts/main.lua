@@ -101,7 +101,7 @@ local function _check_anims(imgs)
 				end
 				anim:add_action(frames)
 				table.insert(anims, anim)
-				utils:logf("auto create anim %s(%d)", name, idx-1)
+				utils:logf("auto create anim <%s> frames=(%d)", name, idx-1)
 			end
 		else
 			i = i + 1
@@ -147,30 +147,30 @@ function run(args)
 		if config.proc_img and utils:check_ext(v, ".png") then
 			local img = ejresource:load_img(full_name, name)
 			if img then
-				utils:logf("load img %s success (%d,%d)", name, img.w, img.h)
+				utils:logf("load img <%s> success size=(%d,%d) offset=(%d,%d)", name, img.w, img.h, img.ox, img.oy)
 				table.insert(all_imgs, img)
 			else
-				utils:logf("load img %s failed", name)
+				utils:logf("load img <%s> failed", name)
 			end
 		end
 
 		if utils:check_ext(v, ".p.lua") then
 			local sheet = ejresource:load_sheet(full_name)
 			if sheet then
-				utils:logf("load sheet %s success", name)
+				utils:logf("load sheet <%s> success", name)
 				table.insert(all_sheets, sheet)
 			else
-				utils:logf("load sheet %s failed", name)
+				utils:logf("load sheet <%s> failed", name)
 			end
 		end
 
 		if config.proc_anim and utils:check_ext(v, ".a.lua") then
 			local anim = ejresource:load_anim(full_name, name)
 			if anim then
-				utils:logf("load anim %s success", name)
+				utils:logf("load anim <%s> success", name)
 				table.insert(all_anims, anim)
 			else
-				utils:logf("load anim %s failed", name)
+				utils:logf("load anim <%s> failed", name)
 			end
 		end
 	end
@@ -198,9 +198,9 @@ function run(args)
 			end
 			if not sheet:pack_img(v) then
 				table.insert(left_imgs, v)
-				utils:logf("pack image %s failed", v.name)
+				utils:logf("pack image <%s> failed", v.name)
 			else
-				utils:logf("pack image %s success", v.name)
+				utils:logf("pack image <%s> success", v.name)
 			end
 		end
 

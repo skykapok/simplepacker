@@ -42,7 +42,7 @@ function pkg_mt:add_img(img)
 	local item = {}
 	item.type = "picture"
 	item.id = self:_next_id()
-	item.data = {#self.sheets, 0, 0, img.w, img.h}
+	item.data = {#self.sheets, {0,0}, {img.w,img.h}, {img.ox,img.oy}}
 	self.items[img.name] = item
 end
 
@@ -104,10 +104,10 @@ function pkg_mt:_serialize_picture(id, name, data)
 	local st = pos[2]
 	local sb = pos[2] + size[2]
 
-	local dl = (-size[1] + offset[1]) * 8  -- left = -(w+ox)/2 * 16
-	local dr = (size[1] + offset[1]) * 8
-	local dt = (-size[2] + offset[2]) * 8
-	local db = (size[2] + offset[2]) * 8
+	local dl = (-size[1]/2 + offset[1]) * 16  -- left = (-w/2 + ox) * 16
+	local dr = (size[1]/2 + offset[1]) * 16
+	local dt = (-size[2]/2 + offset[2]) * 16
+	local db = (size[2]/2 + offset[2]) * 16
 
 	return string.format(TEMPLATE_PICTURE, id, name, tex,
 		sl, st, sl, sb, sr, sb, sr, st,
