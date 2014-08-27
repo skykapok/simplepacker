@@ -52,7 +52,7 @@ function pkg_mt:add_sheet(sheet)
 		local item = {}
 		item.type = "picture"
 		item.id = self:_next_id()
-		item.data = {#self.sheets, v.pos[1], v.pos[2], v.size[1], v.size[2]}  -- texid, x, y, w, h
+		item.data = {#self.sheets, v.pos, v.size, v.offset}  -- texid, pos, size, offset
 		self.items[v.name] = item
 	end
 end
@@ -93,17 +93,21 @@ function pkg_mt:save(path)
 end
 
 function pkg_mt:_serialize_picture(id, name, data)
+	local pos = data[2]
+	local size = data[3]
+	local offset = data[4]
+
 	local tex = data[1]
 
-	local sl = data[2]
-	local sr = data[2] + data[4]
-	local st = data[3]
-	local sb = data[3] + data[5]
+	local sl = pos[1]
+	local sr = pos[1] + size[1]
+	local st = pos[2]
+	local sb = pos[2] + size[2]
 
-	local dl = -data[4]*8  -- left = -w/2 * 16
-	local dr = data[4]*8
-	local dt = -data[5]*8
-	local db = data[5]*8
+	local dl = (-size[1] + offset[1]) * 8  -- left = -(w+ox)/2 * 16
+	local dr = (size[1] + offset[1]) * 8
+	local dt = (-size[2] + offset[2]) * 8
+	local db = (size[2] + offset[2]) * 8
 
 	return string.format(TEMPLATE_PICTURE, id, name, tex,
 		sl, st, sl, sb, sr, sb, sr, st,

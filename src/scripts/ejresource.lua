@@ -5,7 +5,7 @@ local utils = require "utils"
 
 -- file templates
 local TEMPLATE_IMAGE = [[
-	{ name="%s", pos={%d,%d}, size={%d,%d} },
+	{ name="%s", pos={%d,%d}, size={%d,%d}, offset={%d,%d} },
 ]]
 
 -- image
@@ -17,7 +17,7 @@ function img_mt:save(path, desc)  -- ensure no file ext in path string
 	if desc then  --generate a description file as image sheet
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"
-		body = body..string.format(TEMPLATE_IMAGE, self.name, 0, 0, self.w, self.h)
+		body = body..string.format(TEMPLATE_IMAGE, self.name, 0, 0, self.w, self.h, self.ox, self.oy)
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
 	end
@@ -37,7 +37,7 @@ function sheet_mt:pack_img(img)
 		local x = rect.x + 1
 		local y = rect.y + 1
 		libimage:blitimg(self.buf, self.size, self.pixfmt, img.buf, img.w, img.h, x, y)
-		local info = {name=img.name, pos={x,y}, size={img.w,img.h}}
+		local info = {name=img.name, pos={x,y}, size={img.w,img.h}, offset={img.ox,img.oy}}
 		table.insert(self.imgs, info)
 		return true
 	end
@@ -51,7 +51,8 @@ function sheet_mt:save(path, desc)  -- ensure no file ext in path string
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"
 		for _,v in ipairs(self.imgs) do
-			body = body..string.format(TEMPLATE_IMAGE, v.name, v.pos[1], v.pos[2], v.size[1], v.size[2])
+			body = body..string.format(TEMPLATE_IMAGE, v.name,
+				v.pos[1], v.pos[2], v.size[1], v.size[2], v.offset[1], v.offset[2])
 		end
 		body = body.."\n}"
 		libos:writefile(lua_path, body)
@@ -108,15 +109,30 @@ local M = {}
 
 function M:load_img(path, name)
 	local buf, pixfmt, w, h = libimage:loadpng(path)
-	if buf then
-		local img = {}
-		img.buf = buf  -- raw memory for pixel data
-		img.pixfmt = pixfmt  -- pixel format string
-		img.w = w
-		img.h = h
-		img.name = name
-		return setmetatable(img, img_mt)
+	if not buf then return end
+
+	local ox = 0
+	local oy = 0
+	if pixfmt == "RGBA" then
+		local buf_trim, l, r, t, b = libimage:trimimg(buf, w, h, pixfmt)
+		if buf_trim then
+			buf = buf_trim
+			w = w - l - r
+			h = h - t - b
+			ox = l
+			oy = t
+		end
 	end
+
+	local img = {}
+	img.buf = buf  -- raw memory for pixel data
+	img.pixfmt = pixfmt  -- pixel format string
+	img.w = w
+	img.h = h
+	img.ox = ox
+	img.oy = oy
+	img.name = name
+	return setmetatable(img, img_mt)
 end
 
 function M:new_sheet(size, pixfmt)

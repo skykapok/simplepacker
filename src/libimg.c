@@ -193,6 +193,91 @@ lblitimg(lua_State *L) {
 	return 0;
 }
 
+static int
+ltrimimg(lua_State *L) {
+	int pixfmt = _check_pixel_format(luaL_checkstring(L, -1));
+	int h = luaL_checkint(L, -2);
+	int w = luaL_checkint(L, -3);
+	uint8_t* src = lua_touserdata(L, -4);
+
+	if (pixfmt != PIXEL_FORMAT_RGBA) {
+		luaL_error(L, "cannot trim image that do not have alpha channel");
+	}
+
+	int l = 0;
+	int r = 0;
+	int t = 0;
+	int b = 0;
+
+	for (int x = 0; x < w; ++x) {
+		int transparent = 1;
+		for (int y = 0; y < h; ++y) {
+			if (src[(y*w + x) * 4 + 3] > 0) {
+				transparent = 0;
+				break;
+			}
+		}
+		if (!transparent) break;
+		++l;
+	}
+	for (int x = w - 1; x >= 0; --x) {
+		int transparent = 1;
+		for (int y = 0; y < h; ++y) {
+			if (src[(y*w + x) * 4 + 3] > 0) {
+				transparent = 0;
+				break;
+			}
+		}
+		if (!transparent) break;
+		++r;
+	}
+	for (int y = 0; y <= h; ++y) {
+		int transparent = 1;
+		for (int x = 0; x < w; ++x) {
+			if (src[(y*w + x) * 4 + 3] > 0) {
+				transparent = 0;
+				break;
+			}
+		}
+		if (!transparent) break;
+		++t;
+	}
+	for (int y = h - 1; y >= 0; --y) {
+		int transparent = 1;
+		for (int x = 0; x < w; ++x) {
+			if (src[(y*w + x) * 4 + 3] > 0) {
+				transparent = 0;
+				break;
+			}
+		}
+		if (!transparent) break;
+		++b;
+	}
+
+	if (l == 0 && r == 0 && t == 0 && b == 0) {
+		return 0;
+	}
+
+	uint8_t* dst = lua_newuserdata(L, (w - l - r)*(h - t - b) * 4);
+	for (int i = 0; i < h - t - b; ++i) {
+		for (int j = 0; j < w - l - r; ++j) {
+			int k1 = (i*(w - l - r) + j) * 4;
+			int k2 = ((i + t)*w + j + l) * 4;
+			dst[k1 + 0] = src[k2 + 0];
+			dst[k1 + 1] = src[k2 + 1];
+			dst[k1 + 2] = src[k2 + 2];
+			dst[k1 + 3] = src[k2 + 3];
+		}
+	}
+
+	lua_pushnumber(L, l);
+	lua_pushnumber(L, r);
+	lua_pushnumber(L, t);
+	lua_pushnumber(L, b);
+
+	return 5;
+}
+
 int
 register_libimage(lua_State *L) {
 	luaL_Reg l[] = {
@@ -201,6 +286,7 @@ register_libimage(lua_State *L) {
 		{ "saveppm", lsaveppm },
 		{ "newimg", lnewimg },
 		{ "blitimg", lblitimg },
+		{ "trimimg", ltrimimg },
 		{ NULL, NULL }
 	};
 
