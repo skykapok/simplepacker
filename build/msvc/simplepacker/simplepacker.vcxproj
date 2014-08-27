@@ -93,6 +93,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>lua.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(UM_OUTPUT_DIR)
+copy /Y $(UM_BUILD_DIR)\Bin_$(Configuration)\simplepacker.exe $(UM_OUTPUT_DIR)\
+copy /Y $(UM_SCRIPTS_DIR)\*.lua $(UM_OUTPUT_DIR)\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <UM_OUTPUT_DIR>..\..\..\bin\msvc</UM_OUTPUT_DIR>
+    <UM_OUTPUT_DIR>..\..\..\bin</UM_OUTPUT_DIR>
     <UM_BUILD_DIR>..\_build</UM_BUILD_DIR>
     <UM_SCRIPTS_DIR>..\..\..\src\scripts</UM_SCRIPTS_DIR>
   </PropertyGroup>
