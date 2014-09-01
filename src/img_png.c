@@ -75,9 +75,9 @@ img_loadpng(const char* filename, struct png* png) {
 		for (int i = 0; i < h; ++i) {
 			for (int j = 0; j < w; ++j) {
 				int k = (i*w + j) * 3;
-				png->buffer[k + 0] = row_pointers[i][j * 4 + 0]; // red
-				png->buffer[k + 1] = row_pointers[i][j * 4 + 1]; // green
-				png->buffer[k + 2] = row_pointers[i][j * 4 + 2]; // blue
+				png->buffer[k + 0] = row_pointers[i][j * 3 + 0]; // red
+				png->buffer[k + 1] = row_pointers[i][j * 3 + 1]; // green
+				png->buffer[k + 2] = row_pointers[i][j * 3 + 2]; // blue
 			}
 		}
 		break;
