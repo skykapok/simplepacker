@@ -100,9 +100,9 @@ function pkg_mt:_serialize_picture(id, name, data)
 	local tex = data[1]
 
 	local sl = pos[1]
-	local sr = pos[1] + size[1]
+	local sr = pos[1] + size[1] - 1
 	local st = pos[2]
-	local sb = pos[2] + size[2]
+	local sb = pos[2] + size[2] - 1
 
 	local dl = (-size[1]/2 + offset[1]) * 16  -- left = (-w/2 + ox) * 16
 	local dr = (size[1]/2 + offset[1]) * 16
