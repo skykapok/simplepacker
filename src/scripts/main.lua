@@ -4,8 +4,9 @@ local ejpackage = require "ejpackage"
 local utils = require "utils"
 
 local usage = [[
-Usage: simplepacker inputdir [-o path] [-ni] [-ps packsize] [-na] [-raw] [-v]
+Usage: simplepacker inputdir [-o path] [-n name] [-ni] [-ps packsize] [-na] [-raw] [-v]
   -o: specify output directory
+  -n: specify output package name
   -ni: no image, ignore raw image files(png) from the input
   -ps: specify image sheet size, up to 2048. default value is 1024
   -na: no animation, ignore animation description files(.a.lua)
@@ -19,6 +20,7 @@ local config = {
 	proc_img = true,  -- whether to read raw image
 	proc_anim = true,  -- whether to read anim
 	output_path = false,
+	output_name = false,
 	pack_size = 1024,
 	output_raw = false,  -- true for write down all data, false for export ejoy2d package
 }
@@ -40,6 +42,14 @@ local function _parse_args(args)
 				return false
 			end
 			config.output_path = op
+			i = i + 1
+		elseif arg == "-n" then
+			local on = args[i + 1]
+			if on[1] == "-" then
+				print("illegal output name")
+				return false
+			end
+			config.output_name = on
 			i = i + 1
 		elseif arg == "-ni" then
 			config.proc_img = false
@@ -231,6 +241,9 @@ function run(args)
 		end
 	else
 		local _,_,name = string.find(input, ".-([^\\/]+)$")
+		if config.output_name then
+			name = config.output_name
+		end
 		local pkg = ejpackage:new_pkg(name)
 
 		utils:logf("export ejoy2d package %s", name)
