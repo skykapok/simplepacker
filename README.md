@@ -1,6 +1,6 @@
 # SimplePacker
 
-simplepacker是一个为[ejoy2d](https://github.com/ejoy/ejoy2d)引擎设计的打包工具，可以把包含PNG图片的文件夹打包成[simplepackage](https://github.com/ejoy/ejoy2d/blob/master/ejoy2d/simplepackage.lua)可以读取的格式。
+simplepacker是一个为[ejoy2d](https://github.com/ejoy/ejoy2d)引擎设计的打包工具，可以把包含PNG图片的文件夹打包成[simplepackage](https://github.com/ejoy/ejoy2d/blob/master/doc/apicn.md#simplepackage)可以读取的格式。
 
 Build
 =====
