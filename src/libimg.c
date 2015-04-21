@@ -25,6 +25,13 @@ _check_pixel_format(const char* fmt) {
 	}
 }
 
+static void
+_blit(uint8_t* src, uint8_t* dst, int ks, int kd, int depth) {
+	for (int i = 0; i < depth; ++i) {
+		dst[kd + i] = src[ks + i];
+	}
+}
+
 static int
 lloadpng(lua_State *L) {
 	const char* fn = luaL_checkstring(L, -1);
@@ -159,35 +166,60 @@ lblitimg(lua_State *L) {
 	int dst_s = luaL_checkint(L, -7);
 	uint8_t* dst = lua_touserdata(L, -8);
 
+	int ks, kd, depth;
+
 	switch (pixfmt) {  // copy pixels
 	case PIXEL_FORMAT_RGB:
-		for (int i = 0; i < src_h; ++i) {
-			for (int j = 0; j < src_w; ++j) {
-				int k1 = ((y + i)*dst_s + (x + j)) * 3;
-				int k2 = (i*src_w + j) * 3;
-				dst[k1 + 0] = src[k2 + 0];
-				dst[k1 + 1] = src[k2 + 1];
-				dst[k1 + 2] = src[k2 + 2];
-			}
-		}
+		depth = 3;
 		break;
 
 	case PIXEL_FORMAT_RGBA:
-		for (int i = 0; i < src_h; ++i) {
-			for (int j = 0; j < src_w; ++j) {
-				int k1 = ((y + i)*dst_s + (x + j)) * 4;
-				int k2 = (i*src_w + j) * 4;
-				dst[k1 + 0] = src[k2 + 0];
-				dst[k1 + 1] = src[k2 + 1];
-				dst[k1 + 2] = src[k2 + 2];
-				dst[k1 + 3] = src[k2 + 3];
-			}
-		}
+		depth = 4;
 		break;
 
 	default:
 		luaL_error(L, "unknown pixel format");
 		break;
+	}
+
+	ks = 0;
+	kd = ((y - 1)*dst_s + x - 1) * depth;
+	_blit(src, dst, ks, kd, depth);
+
+	ks = (src_w - 1) * depth;
+	kd = ((y - 1)*dst_s + x + src_w) * depth;
+	_blit(src, dst, ks, kd, depth);
+
+	ks = (src_w * (src_h - 1)) * depth;
+	kd = ((y + src_h)*dst_s + x - 1) * depth;
+	_blit(src, dst, ks, kd, depth);
+
+	ks = (src_w * src_h - 1) * depth;
+	kd = ((y + src_h)*dst_s + x + src_w) * depth;
+	_blit(src, dst, ks, kd, depth);
+
+	for (int j = 0; j < src_w; ++j) {
+		ks = j * depth;
+		kd = ((y - 1)*dst_s + (x + j)) * depth;
+		_blit(src, dst, ks, kd, depth);
+		kd = ((y + src_h)*dst_s + (x + j)) * depth;
+		_blit(src, dst, ks, kd, depth);
+	}
+
+	for (int i = 0; i < src_h; ++i) {
+		ks = (i*src_w) * depth;
+		kd = ((y + i)*dst_s + (x - 1)) * depth;
+		_blit(src, dst, ks, kd, depth);
+		kd = ((y + i)*dst_s + (x + src_w)) * depth;
+		_blit(src, dst, ks, kd, depth);
+	}
+
+	for (int i = 0; i < src_h; ++i) {
+		for (int j = 0; j < src_w; ++j) {
+			ks = (i*src_w + j) * depth;
+			kd = ((y + i)*dst_s + (x + j)) * depth;
+			_blit(src, dst, ks, kd, depth);
+		}
 	}
 
 	return 0;
