@@ -180,7 +180,7 @@ function pkg_mt:_serialize_animation(id, name, data)
 	for _,com in ipairs(idx2com) do
 		local item = self.items[com]
 		if item then
-			str_c = string.format("%s\t\t{ id = %d },\n", str_c, item.id)  -- one component one line
+			str_c = string.format("%s\t\t{ id = %d, name = \"%s\" },\n", str_c, item.id, com)  -- one component one line
 		else
 			str_c = string.format("%s\t\t{ name = \"%s\" },\n", str_c, com)  -- anchor
 		end
