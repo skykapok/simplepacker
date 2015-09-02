@@ -202,6 +202,7 @@ lblitimg(lua_State *L) {
 		ks = j * depth;
 		kd = ((y - 1)*dst_s + (x + j)) * depth;
 		_blit(src, dst, ks, kd, depth);
+		ks = ((src_h - 1)*src_w + j) * depth;
 		kd = ((y + src_h)*dst_s + (x + j)) * depth;
 		_blit(src, dst, ks, kd, depth);
 	}
@@ -210,6 +211,7 @@ lblitimg(lua_State *L) {
 		ks = (i*src_w) * depth;
 		kd = ((y + i)*dst_s + (x - 1)) * depth;
 		_blit(src, dst, ks, kd, depth);
+		ks = (i*src_w + src_w - 1) * depth;
 		kd = ((y + i)*dst_s + (x + src_w)) * depth;
 		_blit(src, dst, ks, kd, depth);
 	}
