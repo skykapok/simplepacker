@@ -14,5 +14,6 @@ struct png {
 };
 
 int img_loadpng(const char* filename, struct png* png);
+int img_savepng(const char* filename, int format, int width, int height, uint8_t* buffer);
 
 #endif

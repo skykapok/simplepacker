@@ -4,10 +4,11 @@ local ejpackage = require "ejpackage"
 local utils = require "utils"
 
 local usage = [[
-Usage: simplepacker inputdir [-o path] [-n name] [-ni] [-np] [-ps packsize] [-na] [-raw] [-v]
+Usage: simplepacker inputdir [-o path] [-n name] [-ni] [-fmt ppm|png] [-np] [-ps packsize] [-na] [-raw] [-v]
   -o: specify output directory
   -n: specify output package name
   -ni: no image, ignore raw image files(png) from the input
+  -fmt: specify image format, ppm and png is available. default value is ppm
   -np: no pack, do not pack images to large image sheet
   -ps: specify image sheet size, up to 2048. default value is 1024
   -na: no animation, ignore animation description files(.a.lua)
@@ -21,6 +22,7 @@ local config = {
 	proc_img = true,  -- whether to read raw image
 	proc_anim = true,  -- whether to read anim
 	pack_img = true,
+	img_fmt = "ppm",
 	output_path = false,
 	output_name = false,
 	pack_size = 1024,
@@ -55,6 +57,14 @@ local function _parse_args(args)
 			i = i + 1
 		elseif arg == "-ni" then
 			config.proc_img = false
+		elseif arg == "-fmt" then
+			local fmt = args[i + 1]
+			if fmt ~= "ppm" and fmt ~= "png" then
+				print("illegal image format")
+				return false
+			end
+			config.img_fmt = fmt
+			i = i + 1
 		elseif arg == "-np" then
 			config.pack_img = false
 		elseif arg == "-ps" then
@@ -231,12 +241,12 @@ function run(args)
 
 		for _,v in ipairs(all_imgs) do
 			local path = string.format("%s/%s", output, v.name)
-			v:save(path, true)  -- image save as image sheet
+			v:save(path, true, config.img_fmt)  -- image save as image sheet
 		end
 
 		for i,v in ipairs(all_sheets) do
 			local path = string.format("%s/imagesheet%d", output, i)
-			v:save(path, true)
+			v:save(path, true, config.img_fmt)
 		end
 
 		for _,v in ipairs(all_anims) do
@@ -248,7 +258,7 @@ function run(args)
 		if config.output_name then
 			name = config.output_name
 		end
-		local pkg = ejpackage:new_pkg(name)
+		local pkg = ejpackage:new_pkg(name, config.img_fmt)
 
 		utils:logf("export ejoy2d package %s", name)
 

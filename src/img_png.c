@@ -88,9 +88,62 @@ img_loadpng(const char* filename, struct png* png) {
 		return 0;
 	}
 
+	fclose(fp);
 	png_destroy_read_struct(&png_ptr, &info_ptr, 0);
 
 	png->width = w;
 	png->height = h;
+	return 1;
+}
+
+int
+img_savepng(const char* filename, int format, int width, int height, uint8_t* buffer) {
+	// open file
+	char* tmp = malloc(sizeof(char) * (strlen(filename) + 5));
+	sprintf(tmp, "%s.png", filename);
+
+	FILE* fp = fopen(tmp, "wb");
+	if (!fp) { return 0; }
+
+	// init libpng
+	png_structp png_ptr;
+	png_infop info_ptr;
+	png_colorp palette;
+
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+	info_ptr = png_create_info_struct(png_ptr);
+	setjmp(png_jmpbuf(png_ptr));
+
+	png_init_io(png_ptr, fp);
+
+	int color_type;
+	int bytes_per_pixel;
+	switch (format) {
+	case PNG_RGBA:
+		color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+		bytes_per_pixel = 4;
+		break;
+	case PNG_RGB:
+		color_type = PNG_COLOR_TYPE_RGB;
+		bytes_per_pixel = 3;
+		break;
+	default:
+		fclose(fp);
+		png_destroy_write_struct(&png_ptr, &info_ptr);
+		return 0;
+	}
+
+	// write png data
+	png_set_IHDR(png_ptr, info_ptr, width, height, 8, color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+	png_write_info(png_ptr, info_ptr);
+	png_bytep row_pointers[height];
+	for (int i = 0; i < height; ++i)
+		row_pointers[i] = buffer + i * width * bytes_per_pixel;
+	png_write_image(png_ptr, row_pointers);
+	png_write_end(png_ptr, info_ptr);
+
+	fclose(fp);
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+
 	return 1;
 }

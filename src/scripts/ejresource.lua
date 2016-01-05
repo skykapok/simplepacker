@@ -12,8 +12,12 @@ local TEMPLATE_IMAGE = [[
 local img_mt = {}
 img_mt.__index = img_mt
 
-function img_mt:save(path, desc)  -- ensure no file ext in path string
-	libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
+function img_mt:save(path, desc, fmt)  -- ensure no file ext in path string
+	if fmt == "ppm" then
+		libimage:saveppm(path, self.w, self.h, self.pixfmt, self.buf)
+	elseif fmt == "png" then
+		libimage:savepng(path, self.w, self.h, self.pixfmt, self.buf)
+	end
 	if desc then  --generate a description file as image sheet
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"
@@ -45,8 +49,12 @@ function sheet_mt:pack_img(img)
 	return false
 end
 
-function sheet_mt:save(path, desc)  -- ensure no file ext in path string
-	libimage:saveppm(path, self.size, self.size, self.pixfmt, self.buf)
+function sheet_mt:save(path, desc, fmt)  -- ensure no file ext in path string
+	if fmt == "ppm" then
+		libimage:saveppm(path, self.size, self.size, self.pixfmt, self.buf)
+	elseif fmt == "png" then
+		libimage:savepng(path, self.size, self.size, self.pixfmt, self.buf)
+	end
 	if desc then
 		local lua_path = path..".p.lua"
 		local body = "return {\n\n"

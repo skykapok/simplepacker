@@ -69,6 +69,28 @@ lloadpng(lua_State *L) {
 }
 
 static int
+lsavepng(lua_State *L) {
+	const char* fn = luaL_checkstring(L, -5);  // filename without extension
+	int w = luaL_checkint(L, -4);
+	int h = luaL_checkint(L, -3);
+	int pixfmt = _check_pixel_format(luaL_checkstring(L, -2));
+	uint8_t* buf = (uint8_t*)lua_touserdata(L, -1);
+
+	int ok = 0;
+	if (pixfmt == PIXEL_FORMAT_RGB) {
+		ok = img_savepng(fn, PNG_RGB, w, h, buf);
+	} else if (pixfmt == PIXEL_FORMAT_RGBA) {
+		ok = img_savepng(fn, PNG_RGBA, w, h, buf);
+	}
+
+	if (!ok) {
+		luaL_error(L, "save png failed");
+	}
+
+	return 0;
+}
+
+static int
 lloadppm(lua_State *L) {
 	const char* fn = luaL_checkstring(L, -1);  // filename without extension
 
@@ -316,6 +338,7 @@ int
 register_libimage(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "loadpng", lloadpng },
+		{ "savepng", lsavepng },
 		{ "loadppm", lloadppm },
 		{ "saveppm", lsaveppm },
 		{ "newimg", lnewimg },

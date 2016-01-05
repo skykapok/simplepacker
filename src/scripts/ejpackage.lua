@@ -84,7 +84,7 @@ function pkg_mt:save(path)
 	-- save image sheet
 	for i,v in ipairs(self.sheets) do
 		local picture_path = string.format("%s/%s.%d", path, self.name, i)
-		v:save(picture_path, false)
+		v:save(picture_path, false, self.fmt)
 	end
 
 	-- save description file
@@ -198,10 +198,11 @@ end
 -- ejoy2d package module
 local M = {}
 
-function M:new_pkg(name)
+function M:new_pkg(name, fmt)
 	local pkg = {}
 	pkg._id = 0
 	pkg.name = name
+	pkg.fmt = fmt
 	pkg.sheets = {}
 	pkg.items = {}  -- name:item
 	return setmetatable(pkg, pkg_mt)
